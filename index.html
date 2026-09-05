@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPlan – Din personliga plan</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b0f0d;
+            color: white;
+            line-height: 1.6;
+        }
+
+        header {
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #202620;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #45e879;
+        }
+
+        nav a {
+            color: #ddd;
+            text-decoration: none;
+            margin-left: 25px;
+        }
+
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-size: clamp(45px, 8vw, 80px);
+            line-height: 1.05;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #45e879;
+        }
+
+        .hero p {
+            color: #aaa;
+            font-size: 20px;
+            margin-bottom: 35px;
+        }
+
+        .button {
+            display: inline-block;
+            border: none;
+            background: #45e879;
+            color: #061008;
+            padding: 16px 30px;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            background: #5df58e;
+        }
+
+        .section {
+            max-width: 1000px;
+            margin: auto;
+            padding: 80px 20px;
+        }
+
+        .section h2 {
+            text-align: center;
+            font-size: 38px;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 45px;
+        }
+
+        .form-card {
+            background: #121814;
+            border: 1px solid #252d27;
+            border-radius: 18px;
+            padding: 35px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 9px;
+            border: 1px solid #303a32;
+            background: #0b0f0d;
+            color: white;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #45e879;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-button {
+            margin-top: 25px;
+            width: 100%;
+        }
+
+        #result {
+            display: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .stat {
+            background: #121814;
+            border: 1px solid #252d27;
+            padding: 25px 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            color: #45e879;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .plan-card {
+            background: #121814;
+            border: 1px solid #252d27;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .plan-card h3 {
+            color: #45e879;
+            margin-bottom: 12px;
+        }
+
+        .plan-card p {
+            color: #bbb;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid #202620;
+            color: #777;
+        }
+
+        @media (max-width: 700px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .full {
+                grid-column: auto;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">FitPlan</div>
+
+    <nav>
+        <a href="#start">Start</a>
+        <a href="#plan">Skapa plan</a>
+    </nav>
+</header>
+
+<section class="hero" id="start">
+    <div class="hero-content">
+        <h1>Din kropp.<br><span>Din plan.</span></h1>
+
+        <p>
+            Skapa en personlig kost- och träningsplan
+            baserad på dina mål och din livsstil.
+        </p>
+
+        <a href="#plan" class="button">Skapa min plan</a>
+    </div>
+</section>
+
+<section class="section" id="plan">
+
+    <h2>Skapa din plan</h2>
+
+    <p class="section-subtitle">
+        Fyll i dina uppgifter så räknar FitPlan ut en rekommenderad startpunkt.
+    </p>
+
+    <div class="form-card">
+
+        <div class="form-grid">
+
+            <div class="input-group">
+                <label for="age">Ålder</label>
+                <input type="number" id="age" placeholder="T.ex. 25">
+            </div>
+
+            <div class="input-group">
+                <label for="gender">Kön</label>
+                <select id="gender">
+                    <option value="male">Man</option>
+                    <option value="female">Kvinna</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="height">Längd (cm)</label>
+                <input type="number" id="height" placeholder="T.ex. 180">
+            </div>
+
+            <div class="input-group">
+                <label for="weight">Vikt (kg)</label>
+                <input type="number" id="weight" placeholder="T.ex. 80">
+            </div>
+
+            <div class="input-group">
+                <label for="goal">Ditt mål</label>
+                <select id="goal">
+                    <option value="lose">Gå ner i vikt</option>
+                    <option value="maintain">Behålla vikten</option>
+                    <option value="gain">Bygga muskler</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="activity">Aktivitetsnivå</label>
+                <select id="activity">
+                    <option value="1.2">Lite aktiv</option>
+                    <option value="1.375">Lätt aktiv</option>
+                    <option value="1.55">Medelaktiv</option>
+                    <option value="1.725">Mycket aktiv</option>
+                    <option value="1.9">Extremt aktiv</option>
+                </select>
+            </div>
+
+            <div class="input-group full">
+                <label for="training">Antal träningsdagar per vecka</label>
+                <select id="training">
+                    <option value="2">2 dagar</option>
+                    <option value="3">3 dagar</option>
+                    <option value="4">4 dagar</option>
+                    <option value="5">5 dagar</option>
+                    <option value="6">6 dagar</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button class="button form-button" onclick="createPlan()">
+            Skapa min plan
+        </button>
+
+    </div>
+</section>
+
+<section class="section" id="result">
+
+    <h2>Din rekommenderade plan</h2>
+
+    <p class="section-subtitle">
+        Här är din beräknade startpunkt.
+    </p>
+
+    <div class="result-grid">
+
+        <div class="stat">
+            <div class="stat-number" id="calories">0</div>
+            <div class="stat-label">kcal / dag</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-number" id="protein">0g</div>
+            <div class="stat-label">protein</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-number" id="fat">0g</div>
+            <div class="stat-label">fett</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-number" id="carbs">0g</div>
+            <div class="stat-label">kolhydrater</div>
+        </div>
+
+    </div>
+
+    <div class="plan-card">
+
+        <h3>🏋️ Träning</h3>
+
+        <p id="trainingPlan"></p>
+
+    </div>
+
+    <div class="plan-card">
+
+        <h3>🍽️ Kost</h3>
+
+        <p>
+            Försök fördela dagens protein över flera måltider.
+            Basera kosten på proteinrika livsmedel, grönsaker,
+            frukt, fullkornsprodukter och hälsosamma fettkällor.
+        </p>
+
+    </div>
+
+</section>
+
+<footer>
+    © 2026 FitPlan – Din personliga kost- och träningsplan
+</footer>
+
+
+<script>
+
+function createPlan() {
+
+    const age = Number(document.getElementById("age").value);
+    const gender = document.getElementById("gender").value;
+    const height = Number(document.getElementById("height").value);
+    const weight = Number(document.getElementById("weight").value);
+    const goal = document.getElementById("goal").value;
+    const activity = Number(document.getElementById("activity").value);
+    const training = Number(document.getElementById("training").value);
+
+    if (!age || !height || !weight) {
+        alert("Fyll i ålder, längd och vikt först.");
+        return;
+    }
+
+    let bmr;
+
+    if (gender === "male") {
+        bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+        bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+
+    let calories = bmr * activity;
+
+    if (goal === "lose") {
+        calories -= 400;
+    }
+
+    if (goal === "gain") {
+        calories += 250;
+    }
+
+    calories = Math.round(calories);
+
+    // Protein: cirka 2 g/kg kroppsvikt
+    const protein = Math.round(weight * 2);
+
+    // Fett: cirka 25% av kalorierna
+    const fat = Math.round((calories * 0.25) / 9);
+
+    // Resterande kalorier från kolhydrater
+    const remainingCalories =
+        calories - (protein * 4) - (fat * 9);
+
+    const carbs = Math.max(
+        0,
+        Math.round(remainingCalories / 4)
+    );
+
+    document.getElementById("calories").textContent = calories;
+    document.getElementById("protein").textContent = protein + "g";
+    document.getElementById("fat").textContent = fat + "g";
+    document.getElementById("carbs").textContent = carbs + "g";
+
+    let trainingText = "";
+
+    if (training <= 2) {
+        trainingText =
+            "Vi rekommenderar 2 helkroppspass per vecka med fokus på basövningar och progressiv belastning.";
+    } else if (training === 3) {
+        trainingText =
+            "Vi rekommenderar 3 styrkepass per vecka med fokus på hela kroppen och gradvis progression.";
+    } else if (training === 4) {
+        trainingText =
+            "Vi rekommenderar 4 pass per vecka, exempelvis en överkropp/underkropp-split.";
+    } else {
+        trainingText =
+            "Vi rekommenderar 5–6 träningspass per vecka med en kombination av styrketräning och återhämtning.";
+    }
+
+    document.getElementById("trainingPlan").textContent = trainingText;
+
+    document.getElementById("result").style.display = "block";
+
+    document.getElementById("result").scrollIntoView({
+        behavior: "smooth"
+    });
+}
+
+</script>
+
+</body>
+</html>
