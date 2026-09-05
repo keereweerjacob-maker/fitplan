@@ -2463,7 +2463,7 @@ function renderNutrition() {
               .map(item => `
                 <li>
                   ${escapeHtml(item.name)}:
-                  ${formatIngredientQty(item.qty)}
+                  ${formatMealIngredientQty(item.qty, item.unit)}
                   ${item.unit}
                 </li>
               `)
