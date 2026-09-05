@@ -1,115 +1,202 @@
+```html
 <!DOCTYPE html>
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPlan – Din personliga plan</title>
+
+    <title>FitPlan – Din personliga träningsplan</title>
 
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #080b09;
+            --card: #111612;
+            --card-light: #171d18;
+            --border: #252d27;
+            --green: #45e879;
+            --green-dark: #2fc963;
+            --text: #ffffff;
+            --muted: #8e9890;
+            --danger: #ff6b6b;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #0b0f0d;
-            color: white;
-            line-height: 1.6;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
         header {
-            padding: 20px 8%;
+            height: 72px;
+            padding: 0 6%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #202620;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 11, 9, 0.96);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #45e879;
+            font-size: 25px;
+            font-weight: 800;
+            color: var(--green);
+            letter-spacing: -1px;
         }
 
-        nav a {
-            color: #ddd;
-            text-decoration: none;
-            margin-left: 25px;
+        nav {
+            display: flex;
+            gap: 8px;
         }
+
+        nav button {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        nav button:hover,
+        nav button.active {
+            background: var(--card-light);
+            color: white;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
 
         .hero {
-            min-height: 80vh;
+            min-height: 88vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 60px 20px;
+            padding: 70px 20px;
         }
 
         .hero-content {
-            max-width: 800px;
+            max-width: 850px;
         }
 
-        .hero h1 {
-            font-size: clamp(45px, 8vw, 80px);
-            line-height: 1.05;
+        .badge {
+            display: inline-block;
+            color: var(--green);
+            background: rgba(69, 232, 121, 0.08);
+            border: 1px solid rgba(69, 232, 121, 0.2);
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 13px;
             margin-bottom: 25px;
         }
 
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 86px);
+            line-height: 0.98;
+            letter-spacing: -4px;
+            margin-bottom: 28px;
+        }
+
         .hero h1 span {
-            color: #45e879;
+            color: var(--green);
         }
 
         .hero p {
-            color: #aaa;
-            font-size: 20px;
-            margin-bottom: 35px;
+            color: var(--muted);
+            max-width: 650px;
+            margin: 0 auto 35px;
+            font-size: 19px;
+            line-height: 1.7;
         }
 
-        .button {
-            display: inline-block;
+        .main-button {
             border: none;
-            background: #45e879;
+            background: var(--green);
             color: #061008;
-            padding: 16px 30px;
+            padding: 16px 28px;
             border-radius: 10px;
-            font-size: 17px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 800;
             cursor: pointer;
-            text-decoration: none;
             transition: 0.2s;
         }
 
-        .button:hover {
-            transform: translateY(-2px);
+        .main-button:hover {
             background: #5df58e;
+            transform: translateY(-2px);
         }
 
-        .section {
-            max-width: 1000px;
+        /* =========================
+           GENERAL
+        ========================= */
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .container {
+            max-width: 1150px;
             margin: auto;
-            padding: 80px 20px;
+            padding: 55px 20px 80px;
         }
 
-        .section h2 {
-            text-align: center;
-            font-size: 38px;
-            margin-bottom: 15px;
+        .page-title {
+            margin-bottom: 35px;
         }
 
-        .section-subtitle {
-            text-align: center;
-            color: #999;
-            margin-bottom: 45px;
+        .page-title h2 {
+            font-size: 36px;
+            margin-bottom: 8px;
         }
 
-        .form-card {
-            background: #121814;
-            border: 1px solid #252d27;
+        .page-title p {
+            color: var(--muted);
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 35px;
+            padding: 25px;
+        }
+
+        /* =========================
+           FORM
+        ========================= */
+
+        .form-container {
+            max-width: 850px;
+            margin: auto;
         }
 
         .form-grid {
@@ -124,107 +211,402 @@
         }
 
         .input-group label {
+            color: #d5d9d6;
+            font-size: 14px;
             margin-bottom: 8px;
-            color: #ccc;
         }
 
-        input, select {
-            width: 100%;
-            padding: 14px;
-            border-radius: 9px;
-            border: 1px solid #303a32;
-            background: #0b0f0d;
+        input,
+        select {
+            background: #090d0a;
             color: white;
-            font-size: 16px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 14px;
+            font-size: 15px;
+            outline: none;
         }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: #45e879;
+        input:focus,
+        select:focus {
+            border-color: var(--green);
         }
 
         .full {
             grid-column: 1 / -1;
         }
 
-        .form-button {
-            margin-top: 25px;
+        .form-submit {
             width: 100%;
+            margin-top: 25px;
         }
 
-        #result {
-            display: none;
+        /* =========================
+           DASHBOARD
+        ========================= */
+
+        .welcome {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        .result-grid {
+        .welcome h2 {
+            font-size: 34px;
+            margin-bottom: 6px;
+        }
+
+        .welcome p {
+            color: var(--muted);
+        }
+
+        .goal-pill {
+            border: 1px solid rgba(69, 232, 121, 0.25);
+            color: var(--green);
+            background: rgba(69, 232, 121, 0.08);
+            padding: 10px 15px;
+            border-radius: 30px;
+            font-size: 13px;
+        }
+
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-            margin: 30px 0;
+            margin-bottom: 25px;
         }
 
-        .stat {
-            background: #121814;
-            border: 1px solid #252d27;
-            padding: 25px 15px;
-            border-radius: 15px;
-            text-align: center;
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
         }
 
-        .stat-number {
-            color: #45e879;
+        .stat-card .icon {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .number {
             font-size: 30px;
-            font-weight: bold;
+            font-weight: 800;
+            margin-bottom: 4px;
         }
 
-        .stat-label {
-            color: #999;
+        .stat-card .label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 19px;
+        }
+
+        .card-header span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* =========================
+           WEEK
+        ========================= */
+
+        .week-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .day {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            background: #0b100c;
+            border: 1px solid #1c231e;
+            border-radius: 10px;
+        }
+
+        .day-left {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .day-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: rgba(69, 232, 121, 0.1);
+        }
+
+        .day strong {
+            display: block;
             font-size: 14px;
+            margin-bottom: 2px;
         }
 
-        .plan-card {
-            background: #121814;
-            border: 1px solid #252d27;
-            padding: 30px;
-            border-radius: 15px;
-            margin-top: 20px;
+        .day small {
+            color: var(--muted);
         }
 
-        .plan-card h3 {
-            color: #45e879;
-            margin-bottom: 12px;
-        }
-
-        .plan-card p {
-            color: #bbb;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            border-top: 1px solid #202620;
+        .rest {
             color: #777;
         }
 
-        @media (max-width: 700px) {
-            .form-grid {
+        /* =========================
+           PROGRESS
+        ========================= */
+
+        .progress-section {
+            margin-bottom: 25px;
+        }
+
+        .progress-values {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #242b25;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+        }
+
+        .weight-big {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 5px 0;
+        }
+
+        /* =========================
+           TRAINING
+        ========================= */
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .exercise {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0b100c;
+            border: 1px solid #1c231e;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .exercise strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .exercise small {
+            color: var(--muted);
+        }
+
+        .exercise-result {
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        /* =========================
+           MEALS
+        ========================= */
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .meal {
+            background: #0b100c;
+            border: 1px solid #1c231e;
+            border-radius: 13px;
+            padding: 18px;
+        }
+
+        .meal-icon {
+            font-size: 25px;
+            margin-bottom: 10px;
+        }
+
+        .meal h3 {
+            margin-bottom: 5px;
+        }
+
+        .meal p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .meal-kcal {
+            color: var(--green);
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        /* =========================
+           PROGRESS PAGE
+        ========================= */
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .weight-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .weight-input input {
+            flex: 1;
+        }
+
+        .small-button {
+            border: none;
+            background: var(--green);
+            color: #061008;
+            padding: 12px 18px;
+            border-radius: 9px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .weight-history {
+            margin-top: 20px;
+        }
+
+        .weight-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            color: #ccc;
+        }
+
+        .weight-row span:last-child {
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            text-align: center;
+            padding: 35px 20px;
+            color: #555;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            header {
+                padding: 0 20px;
+            }
+
+            nav button {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid,
+            .progress-grid {
                 grid-template-columns: 1fr;
             }
 
-            .result-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .meal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
             }
 
             .full {
                 grid-column: auto;
             }
 
-            nav {
-                display: none;
+            .hero h1 {
+                letter-spacing: -2px;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
             }
 
-            .form-card {
-                padding: 20px;
+            .stat-card {
+                padding: 17px;
+            }
+
+            .stat-card .number {
+                font-size: 24px;
+            }
+
+            .container {
+                padding-top: 35px;
+            }
+
+            .page-title h2 {
+                font-size: 29px;
             }
         }
     </style>
@@ -233,244 +615,1683 @@
 <body>
 
 <header>
+
     <div class="logo">FitPlan</div>
 
-    <nav>
-        <a href="#start">Start</a>
-        <a href="#plan">Skapa plan</a>
-    </nav>
-</header>
-
-<section class="hero" id="start">
-    <div class="hero-content">
-        <h1>Din kropp.<br><span>Din plan.</span></h1>
-
-        <p>
-            Skapa en personlig kost- och träningsplan
-            baserad på dina mål och din livsstil.
-        </p>
-
-        <a href="#plan" class="button">Skapa min plan</a>
-    </div>
-</section>
-
-<section class="section" id="plan">
-
-    <h2>Skapa din plan</h2>
-
-    <p class="section-subtitle">
-        Fyll i dina uppgifter så räknar FitPlan ut en rekommenderad startpunkt.
-    </p>
-
-    <div class="form-card">
-
-        <div class="form-grid">
-
-            <div class="input-group">
-                <label for="age">Ålder</label>
-                <input type="number" id="age" placeholder="T.ex. 25">
-            </div>
-
-            <div class="input-group">
-                <label for="gender">Kön</label>
-                <select id="gender">
-                    <option value="male">Man</option>
-                    <option value="female">Kvinna</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="height">Längd (cm)</label>
-                <input type="number" id="height" placeholder="T.ex. 180">
-            </div>
-
-            <div class="input-group">
-                <label for="weight">Vikt (kg)</label>
-                <input type="number" id="weight" placeholder="T.ex. 80">
-            </div>
-
-            <div class="input-group">
-                <label for="goal">Ditt mål</label>
-                <select id="goal">
-                    <option value="lose">Gå ner i vikt</option>
-                    <option value="maintain">Behålla vikten</option>
-                    <option value="gain">Bygga muskler</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="activity">Aktivitetsnivå</label>
-                <select id="activity">
-                    <option value="1.2">Lite aktiv</option>
-                    <option value="1.375">Lätt aktiv</option>
-                    <option value="1.55">Medelaktiv</option>
-                    <option value="1.725">Mycket aktiv</option>
-                    <option value="1.9">Extremt aktiv</option>
-                </select>
-            </div>
-
-            <div class="input-group full">
-                <label for="training">Antal träningsdagar per vecka</label>
-                <select id="training">
-                    <option value="2">2 dagar</option>
-                    <option value="3">3 dagar</option>
-                    <option value="4">4 dagar</option>
-                    <option value="5">5 dagar</option>
-                    <option value="6">6 dagar</option>
-                </select>
-            </div>
-
-        </div>
-
-        <button class="button form-button" onclick="createPlan()">
-            Skapa min plan
+    <nav id="navigation" style="display:none;">
+        <button onclick="showPage('dashboard')" class="active" id="navDashboard">
+            Dashboard
         </button>
 
-    </div>
-</section>
+        <button onclick="showPage('nutrition')" id="navNutrition">
+            Kost
+        </button>
 
-<section class="section" id="result">
+        <button onclick="showPage('training')" id="navTraining">
+            Träning
+        </button>
 
-    <h2>Din rekommenderade plan</h2>
+        <button onclick="showPage('progress')" id="navProgress">
+            Progress
+        </button>
+    </nav>
 
-    <p class="section-subtitle">
-        Här är din beräknade startpunkt.
-    </p>
+</header>
 
-    <div class="result-grid">
 
-        <div class="stat">
-            <div class="stat-number" id="calories">0</div>
-            <div class="stat-label">kcal / dag</div>
+<!-- =========================
+     STARTSIDA
+========================= -->
+
+<section id="home" class="page active">
+
+    <div class="hero">
+
+        <div class="hero-content">
+
+            <div class="badge">
+                PERSONLIG KOST & TRÄNING
+            </div>
+
+            <h1>
+                Din kropp.<br>
+                <span>Din plan.</span>
+            </h1>
+
+            <p>
+                Skapa en personlig kost- och träningsplan
+                baserad på dina mål, din kropp och din livsstil.
+            </p>
+
+            <button class="main-button" onclick="showPage('setup')">
+                Skapa min plan →
+            </button>
+
         </div>
-
-        <div class="stat">
-            <div class="stat-number" id="protein">0g</div>
-            <div class="stat-label">protein</div>
-        </div>
-
-        <div class="stat">
-            <div class="stat-number" id="fat">0g</div>
-            <div class="stat-label">fett</div>
-        </div>
-
-        <div class="stat">
-            <div class="stat-number" id="carbs">0g</div>
-            <div class="stat-label">kolhydrater</div>
-        </div>
-
-    </div>
-
-    <div class="plan-card">
-
-        <h3>🏋️ Träning</h3>
-
-        <p id="trainingPlan"></p>
-
-    </div>
-
-    <div class="plan-card">
-
-        <h3>🍽️ Kost</h3>
-
-        <p>
-            Försök fördela dagens protein över flera måltider.
-            Basera kosten på proteinrika livsmedel, grönsaker,
-            frukt, fullkornsprodukter och hälsosamma fettkällor.
-        </p>
 
     </div>
 
 </section>
+
+
+<!-- =========================
+     SETUP
+========================= -->
+
+<section id="setup" class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+            <h2>Skapa din plan</h2>
+
+            <p>
+                Fyll i dina uppgifter så räknar FitPlan ut
+                en personlig startpunkt.
+            </p>
+        </div>
+
+        <div class="card form-container">
+
+            <div class="form-grid">
+
+                <div class="input-group">
+                    <label>Ålder</label>
+                    <input
+                        type="number"
+                        id="age"
+                        placeholder="T.ex. 25"
+                        min="13"
+                        max="100"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>Kön</label>
+
+                    <select id="gender">
+                        <option value="male">Man</option>
+                        <option value="female">Kvinna</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Längd (cm)</label>
+
+                    <input
+                        type="number"
+                        id="height"
+                        placeholder="T.ex. 180"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>Vikt (kg)</label>
+
+                    <input
+                        type="number"
+                        id="weight"
+                        placeholder="T.ex. 80"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>Målvikt (kg)</label>
+
+                    <input
+                        type="number"
+                        id="targetWeight"
+                        placeholder="T.ex. 75"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>Ditt mål</label>
+
+                    <select id="goal">
+                        <option value="lose">
+                            🔥 Gå ner i vikt
+                        </option>
+
+                        <option value="maintain">
+                            ⚖️ Behålla vikten
+                        </option>
+
+                        <option value="gain">
+                            💪 Bygga muskler
+                        </option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Aktivitetsnivå</label>
+
+                    <select id="activity">
+                        <option value="1.2">
+                            Lite aktiv
+                        </option>
+
+                        <option value="1.375">
+                            Lätt aktiv
+                        </option>
+
+                        <option value="1.55">
+                            Medelaktiv
+                        </option>
+
+                        <option value="1.725">
+                            Mycket aktiv
+                        </option>
+
+                        <option value="1.9">
+                            Extremt aktiv
+                        </option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Träningsdagar / vecka</label>
+
+                    <select id="trainingDays">
+                        <option value="2">2 dagar</option>
+                        <option value="3">3 dagar</option>
+                        <option value="4">4 dagar</option>
+                        <option value="5">5 dagar</option>
+                        <option value="6">6 dagar</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button
+                class="main-button form-submit"
+                onclick="createPlan()"
+            >
+                Skapa min personliga plan →
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     DASHBOARD
+========================= -->
+
+<section id="dashboard" class="page">
+
+    <div class="container">
+
+        <div class="welcome">
+
+            <div>
+                <h2>Hej! 👋</h2>
+
+                <p>
+                    Här är din personliga FitPlan.
+                </p>
+            </div>
+
+            <div class="goal-pill" id="goalDisplay">
+                Ditt mål
+            </div>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="icon">🔥</div>
+
+                <div class="number" id="caloriesDisplay">
+                    0
+                </div>
+
+                <div class="label">
+                    kcal / dag
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="icon">🥩</div>
+
+                <div class="number" id="proteinDisplay">
+                    0g
+                </div>
+
+                <div class="label">
+                    protein
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="icon">🍚</div>
+
+                <div class="number" id="carbsDisplay">
+                    0g
+                </div>
+
+                <div class="label">
+                    kolhydrater
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="icon">🥑</div>
+
+                <div class="number" id="fatDisplay">
+                    0g
+                </div>
+
+                <div class="label">
+                    fett
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-grid">
+
+
+            <!-- VECKANS TRÄNING -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3>🏋️ Veckans träning</h3>
+
+                    <span id="trainingDaysDisplay">
+                        4 pass
+                    </span>
+
+                </div>
+
+                <div class="week-list" id="weekList"></div>
+
+            </div>
+
+
+            <!-- PROGRESS -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3>📈 Din progress</h3>
+
+                    <span id="progressPercent">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="weight-big">
+                    <span id="currentWeightDisplay">0</span>
+                    <small style="font-size:16px;color:#888;">
+                        kg
+                    </small>
+                </div>
+
+                <p style="color:#888;margin-bottom:25px;">
+                    Nuvarande vikt
+                </p>
+
+                <div class="progress-section">
+
+                    <div class="progress-values">
+
+                        <span>
+                            Start:
+                            <span id="startWeightDisplay">
+                                0
+                            </span> kg
+                        </span>
+
+                        <span>
+                            Mål:
+                            <span id="targetWeightDisplay">
+                                0
+                            </span> kg
+                        </span>
+
+                    </div>
+
+                    <div class="progress-bar">
+                        <div
+                            class="progress-fill"
+                            id="progressFill"
+                        ></div>
+                    </div>
+
+                </div>
+
+                <button
+                    class="small-button"
+                    onclick="showPage('progress')"
+                >
+                    Uppdatera progress
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- DAGENS PASS -->
+
+        <div class="card" style="margin-top:20px;">
+
+            <div class="card-header">
+
+                <h3>🔥 Dagens träningspass</h3>
+
+                <span id="todayWorkoutName">
+                    Styrketräning
+                </span>
+
+            </div>
+
+            <div class="exercise-list" id="todayExercises"></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     KOST
+========================= -->
+
+<section id="nutrition" class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+
+            <h2>🍽️ Din kostplan</h2>
+
+            <p>
+                Exempel på hur dagens kalorier kan fördelas.
+            </p>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="icon">🔥</div>
+
+                <div class="number" id="nutritionCalories">
+                    0
+                </div>
+
+                <div class="label">
+                    kcal
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="icon">🥩</div>
+
+                <div class="number" id="nutritionProtein">
+                    0g
+                </div>
+
+                <div class="label">
+                    protein
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="icon">🍚</div>
+
+                <div class="number" id="nutritionCarbs">
+                    0g
+                </div>
+
+                <div class="label">
+                    kolhydrater
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="icon">🥑</div>
+
+                <div class="number" id="nutritionFat">
+                    0g
+                </div>
+
+                <div class="label">
+                    fett
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="meal-grid">
+
+            <div class="meal">
+
+                <div class="meal-icon">
+                    🥣
+                </div>
+
+                <h3>Frukost</h3>
+
+                <p>
+                    Havregrynsgröt med mjölk,
+                    banan och proteinrik yoghurt.
+                </p>
+
+                <div class="meal-kcal">
+                    Rekommenderad del av dagens kalorier
+                </div>
+
+            </div>
+
+
+            <div class="meal">
+
+                <div class="meal-icon">
+                    🥗
+                </div>
+
+                <h3>Lunch</h3>
+
+                <p>
+                    Kyckling, ris, grönsaker
+                    och en hälsosam fettkälla.
+                </p>
+
+                <div class="meal-kcal">
+                    Rekommenderad del av dagens kalorier
+                </div>
+
+            </div>
+
+
+            <div class="meal">
+
+                <div class="meal-icon">
+                    🍌
+                </div>
+
+                <h3>Mellanmål</h3>
+
+                <p>
+                    Kvarg eller yoghurt,
+                    frukt och nötter.
+                </p>
+
+                <div class="meal-kcal">
+                    Rekommenderad del av dagens kalorier
+                </div>
+
+            </div>
+
+
+            <div class="meal">
+
+                <div class="meal-icon">
+                    🍗
+                </div>
+
+                <h3>Middag</h3>
+
+                <p>
+                    Valfri proteinkälla,
+                    potatis eller ris och mycket grönsaker.
+                </p>
+
+                <div class="meal-kcal">
+                    Rekommenderad del av dagens kalorier
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     TRÄNING
+========================= -->
+
+<section id="training" class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+
+            <h2>🏋️ Träningsprogram</h2>
+
+            <p>
+                Ditt rekommenderade upplägg baserat på
+                hur många dagar du vill träna.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <h3 id="trainingPageTitle">
+                    Veckans träningsprogram
+                </h3>
+
+                <span id="trainingFrequency">
+                    4 pass / vecka
+                </span>
+
+            </div>
+
+            <div
+                class="week-list"
+                id="trainingPageList"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     PROGRESS
+========================= -->
+
+<section id="progress" class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+
+            <h2>📈 Din progress</h2>
+
+            <p>
+                Följ din utveckling över tid.
+            </p>
+
+        </div>
+
+
+        <div class="progress-grid">
+
+            <div class="card">
+
+                <h3>⚖️ Uppdatera vikt</h3>
+
+                <p style="color:#888;margin-top:7px;">
+                    Lägg till din nuvarande vikt.
+                </p>
+
+                <div class="weight-input">
+
+                    <input
+                        type="number"
+                        id="newWeight"
+                        placeholder="Vikt i kg"
+                        step="0.1"
+                    >
+
+                    <button
+                        class="small-button"
+                        onclick="updateWeight()"
+                    >
+                        Spara
+                    </button>
+
+                </div>
+
+                <div class="weight-history" id="weightHistory"></div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>🎯 Ditt mål</h3>
+
+                <div style="margin-top:25px;">
+
+                    <p style="color:#888;">
+                        Startvikt
+                    </p>
+
+                    <strong
+                        style="font-size:25px;"
+                        id="progressStart"
+                    >
+                        0 kg
+                    </strong>
+
+                </div>
+
+                <div style="margin-top:20px;">
+
+                    <p style="color:#888;">
+                        Målvikt
+                    </p>
+
+                    <strong
+                        style="font-size:25px;color:#45e879;"
+                        id="progressTarget"
+                    >
+                        0 kg
+                    </strong>
+
+                </div>
+
+                <div style="margin-top:20px;">
+
+                    <p style="color:#888;">
+                        Nuvarande vikt
+                    </p>
+
+                    <strong
+                        style="font-size:25px;"
+                        id="progressCurrent"
+                    >
+                        0 kg
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
 
 <footer>
-    © 2026 FitPlan – Din personliga kost- och träningsplan
+    FitPlan © 2026 · Din personliga kost- och träningsplan
 </footer>
 
 
 <script>
 
-function createPlan() {
+    /* ==========================================
+       DATA
+    ========================================== */
 
-    const age = Number(document.getElementById("age").value);
-    const gender = document.getElementById("gender").value;
-    const height = Number(document.getElementById("height").value);
-    const weight = Number(document.getElementById("weight").value);
-    const goal = document.getElementById("goal").value;
-    const activity = Number(document.getElementById("activity").value);
-    const training = Number(document.getElementById("training").value);
+    let user = {
+        age: 0,
+        gender: "",
+        height: 0,
+        weight: 0,
+        targetWeight: 0,
+        goal: "",
+        activity: 1.2,
+        trainingDays: 4,
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        history: []
+    };
 
-    if (!age || !height || !weight) {
-        alert("Fyll i ålder, längd och vikt först.");
-        return;
+
+    /* ==========================================
+       PAGE NAVIGATION
+    ========================================== */
+
+    function showPage(pageName) {
+
+        const pages = document.querySelectorAll(".page");
+
+        pages.forEach(page => {
+            page.classList.remove("active");
+        });
+
+        const selected = document.getElementById(pageName);
+
+        if (selected) {
+            selected.classList.add("active");
+        }
+
+        const nav = document.getElementById("navigation");
+
+        if (
+            pageName === "dashboard" ||
+            pageName === "nutrition" ||
+            pageName === "training" ||
+            pageName === "progress"
+        ) {
+            nav.style.display = "flex";
+        }
+
+        if (
+            pageName === "home" ||
+            pageName === "setup"
+        ) {
+            nav.style.display = "none";
+        }
+
+        document.querySelectorAll("nav button")
+            .forEach(button => {
+                button.classList.remove("active");
+            });
+
+        const navButton = document.getElementById(
+            "nav" +
+            pageName.charAt(0).toUpperCase() +
+            pageName.slice(1)
+        );
+
+        if (navButton) {
+            navButton.classList.add("active");
+        }
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
 
-    let bmr;
 
-    if (gender === "male") {
-        bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-    } else {
-        bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    /* ==========================================
+       CREATE PLAN
+    ========================================== */
+
+    function createPlan() {
+
+        const age =
+            Number(document.getElementById("age").value);
+
+        const gender =
+            document.getElementById("gender").value;
+
+        const height =
+            Number(document.getElementById("height").value);
+
+        const weight =
+            Number(document.getElementById("weight").value);
+
+        const targetWeight =
+            Number(document.getElementById("targetWeight").value);
+
+        const goal =
+            document.getElementById("goal").value;
+
+        const activity =
+            Number(document.getElementById("activity").value);
+
+        const trainingDays =
+            Number(document.getElementById("trainingDays").value);
+
+
+        if (
+            !age ||
+            !height ||
+            !weight ||
+            !targetWeight
+        ) {
+
+            alert(
+                "Fyll i ålder, längd, vikt och målvikt först."
+            );
+
+            return;
+        }
+
+
+        /* Mifflin-St Jeor */
+
+        let bmr;
+
+        if (gender === "male") {
+
+            bmr =
+                (10 * weight) +
+                (6.25 * height) -
+                (5 * age) +
+                5;
+
+        } else {
+
+            bmr =
+                (10 * weight) +
+                (6.25 * height) -
+                (5 * age) -
+                161;
+        }
+
+
+        let calories =
+            bmr * activity;
+
+
+        if (goal === "lose") {
+
+            calories -= 400;
+
+        } else if (goal === "gain") {
+
+            calories += 250;
+        }
+
+
+        calories =
+            Math.round(calories);
+
+
+        /* Protein */
+
+        const protein =
+            Math.round(weight * 2);
+
+
+        /* Fat */
+
+        const fat =
+            Math.round(
+                (calories * 0.25) / 9
+            );
+
+
+        /* Carbohydrates */
+
+        const remainingCalories =
+            calories -
+            (protein * 4) -
+            (fat * 9);
+
+        const carbs =
+            Math.max(
+                0,
+                Math.round(
+                    remainingCalories / 4
+                )
+            );
+
+
+        user = {
+            age,
+            gender,
+            height,
+            weight,
+            targetWeight,
+            goal,
+            activity,
+            trainingDays,
+            calories,
+            protein,
+            carbs,
+            fat,
+            history: [
+                {
+                    date: new Date().toLocaleDateString("sv-SE"),
+                    weight
+                }
+            ]
+        };
+
+
+        saveUser();
+
+        updateDashboard();
+
+        showPage("dashboard");
     }
 
-    let calories = bmr * activity;
 
-    if (goal === "lose") {
-        calories -= 400;
+    /* ==========================================
+       GOAL TEXT
+    ========================================== */
+
+    function getGoalText() {
+
+        if (user.goal === "lose") {
+            return "🔥 Gå ner i vikt";
+        }
+
+        if (user.goal === "gain") {
+            return "💪 Bygga muskler";
+        }
+
+        return "⚖️ Behålla vikten";
     }
 
-    if (goal === "gain") {
-        calories += 250;
+
+    /* ==========================================
+       DASHBOARD
+    ========================================== */
+
+    function updateDashboard() {
+
+        document.getElementById(
+            "goalDisplay"
+        ).textContent = getGoalText();
+
+
+        document.getElementById(
+            "caloriesDisplay"
+        ).textContent =
+            user.calories;
+
+
+        document.getElementById(
+            "proteinDisplay"
+        ).textContent =
+            user.protein + "g";
+
+
+        document.getElementById(
+            "carbsDisplay"
+        ).textContent =
+            user.carbs + "g";
+
+
+        document.getElementById(
+            "fatDisplay"
+        ).textContent =
+            user.fat + "g";
+
+
+        document.getElementById(
+            "trainingDaysDisplay"
+        ).textContent =
+            user.trainingDays + " pass";
+
+
+        document.getElementById(
+            "currentWeightDisplay"
+        ).textContent =
+            user.weight;
+
+
+        document.getElementById(
+            "startWeightDisplay"
+        ).textContent =
+            user.history.length
+                ? user.history[0].weight
+                : user.weight;
+
+
+        document.getElementById(
+            "targetWeightDisplay"
+        ).textContent =
+            user.targetWeight;
+
+
+        updateProgress();
+
+        createWeek();
+
+        createTodayWorkout();
+
+        updateNutrition();
+
+        updateTrainingPage();
+
+        updateProgressPage();
     }
 
-    calories = Math.round(calories);
 
-    // Protein: cirka 2 g/kg kroppsvikt
-    const protein = Math.round(weight * 2);
+    /* ==========================================
+       PROGRESS
+    ========================================== */
 
-    // Fett: cirka 25% av kalorierna
-    const fat = Math.round((calories * 0.25) / 9);
+    function updateProgress() {
 
-    // Resterande kalorier från kolhydrater
-    const remainingCalories =
-        calories - (protein * 4) - (fat * 9);
+        const startWeight =
+            user.history.length
+                ? Number(user.history[0].weight)
+                : user.weight;
 
-    const carbs = Math.max(
-        0,
-        Math.round(remainingCalories / 4)
-    );
+        const current =
+            Number(user.weight);
 
-    document.getElementById("calories").textContent = calories;
-    document.getElementById("protein").textContent = protein + "g";
-    document.getElementById("fat").textContent = fat + "g";
-    document.getElementById("carbs").textContent = carbs + "g";
+        const target =
+            Number(user.targetWeight);
 
-    let trainingText = "";
 
-    if (training <= 2) {
-        trainingText =
-            "Vi rekommenderar 2 helkroppspass per vecka med fokus på basövningar och progressiv belastning.";
-    } else if (training === 3) {
-        trainingText =
-            "Vi rekommenderar 3 styrkepass per vecka med fokus på hela kroppen och gradvis progression.";
-    } else if (training === 4) {
-        trainingText =
-            "Vi rekommenderar 4 pass per vecka, exempelvis en överkropp/underkropp-split.";
-    } else {
-        trainingText =
-            "Vi rekommenderar 5–6 träningspass per vecka med en kombination av styrketräning och återhämtning.";
+        let progress = 0;
+
+
+        if (startWeight !== target) {
+
+            progress =
+                ((startWeight - current) /
+                (startWeight - target)) * 100;
+
+        } else {
+
+            progress = 100;
+        }
+
+
+        progress =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    progress
+                )
+            );
+
+
+        document.getElementById(
+            "progressFill"
+        ).style.width =
+            progress + "%";
+
+
+        document.getElementById(
+            "progressPercent"
+        ).textContent =
+            Math.round(progress) + "%";
     }
 
-    document.getElementById("trainingPlan").textContent = trainingText;
 
-    document.getElementById("result").style.display = "block";
+    /* ==========================================
+       WEEKLY TRAINING
+    ========================================== */
 
-    document.getElementById("result").scrollIntoView({
-        behavior: "smooth"
-    });
-}
+    function getWorkoutNames() {
+
+        const days =
+            user.trainingDays;
+
+        if (days === 2) {
+
+            return [
+                "Helkropp A",
+                "Vila",
+                "Vila",
+                "Helkropp B",
+                "Vila",
+                "Vila",
+                "Vila"
+            ];
+
+        }
+
+        if (days === 3) {
+
+            return [
+                "Helkropp",
+                "Vila",
+                "Överkropp",
+                "Vila",
+                "Underkropp",
+                "Vila",
+                "Vila"
+            ];
+
+        }
+
+        if (days === 4) {
+
+            return [
+                "Överkropp",
+                "Underkropp",
+                "Vila",
+                "Överkropp",
+                "Underkropp",
+                "Vila",
+                "Vila"
+            ];
+
+        }
+
+        if (days === 5) {
+
+            return [
+                "Bröst & triceps",
+                "Rygg & biceps",
+                "Ben",
+                "Axlar & mage",
+                "Helkropp",
+                "Vila",
+                "Vila"
+            ];
+
+        }
+
+        return [
+            "Bröst",
+            "Rygg",
+            "Ben",
+            "Axlar",
+            "Armar",
+            "Helkropp",
+            "Vila"
+        ];
+    }
+
+
+    function createWeek() {
+
+        const names =
+            getWorkoutNames();
+
+        const days = [
+            "Måndag",
+            "Tisdag",
+            "Onsdag",
+            "Torsdag",
+            "Fredag",
+            "Lördag",
+            "Söndag"
+        ];
+
+
+        const icons = [
+            "🏋️",
+            "💪",
+            "🦵",
+            "🏋️",
+            "🔥",
+            "⚡",
+            "😴"
+        ];
+
+
+        const container =
+            document.getElementById(
+                "weekList"
+            );
+
+
+        container.innerHTML = "";
+
+
+        for (
+            let i = 0;
+            i < 7;
+            i++
+        ) {
+
+            const isRest =
+                names[i] === "Vila";
+
+
+            const div =
+                document.createElement("div");
+
+
+            div.className =
+                "day";
+
+
+            div.innerHTML = `
+
+                <div class="day-left">
+
+                    <div class="day-icon">
+                        ${icons[i]}
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            ${days[i]}
+                        </strong>
+
+                        <small class="${
+                            isRest ? "rest" : ""
+                        }">
+                            ${names[i]}
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <span>
+                    ${isRest ? "–" : "›"}
+                </span>
+
+            `;
+
+
+            container.appendChild(div);
+        }
+    }
+
+
+    /* ==========================================
+       TODAY WORKOUT
+    ========================================== */
+
+    function createTodayWorkout() {
+
+        const names =
+            getWorkoutNames();
+
+        const today =
+            new Date().getDay();
+
+        const index =
+            today === 0
+                ? 6
+                : today - 1;
+
+
+        const workout =
+            names[index];
+
+
+        document.getElementById(
+            "todayWorkoutName"
+        ).textContent =
+            workout;
+
+
+        const container =
+            document.getElementById(
+                "todayExercises"
+            );
+
+
+        container.innerHTML = "";
+
+
+        if (workout === "Vila") {
+
+            container.innerHTML = `
+                <div style="
+                    padding:25px;
+                    text-align:center;
+                    color:#888;
+                ">
+                    😴 Idag är en vilodag.<br>
+                    <span style="font-size:13px;">
+                        Återhämtning är en del av träningen.
+                    </span>
+                </div>
+            `;
+
+            return;
+        }
+
+
+        const exercises = [
+            ["Knäböj", "4 set × 6–8 reps"],
+            ["Bänkpress", "4 set × 6–8 reps"],
+            ["Latsdrag", "3 set × 8–12 reps"],
+            ["Hantelrodd", "3 set × 8–12 reps"],
+            ["Sidolyft", "3 set × 12–15 reps"]
+        ];
+
+
+        exercises.forEach(
+            exercise => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+                div.className =
+                    "exercise";
+
+
+                div.innerHTML = `
+
+                    <div>
+                        <strong>
+                            ${exercise[0]}
+                        </strong>
+
+                        <small>
+                            ${exercise[1]}
+                        </small>
+                    </div>
+
+                    <div class="exercise-result">
+                        →
+                    </div>
+
+                `;
+
+
+                container.appendChild(div);
+            }
+        );
+    }
+
+
+    /* ==========================================
+       NUTRITION
+    ========================================== */
+
+    function updateNutrition() {
+
+        document.getElementById(
+            "nutritionCalories"
+        ).textContent =
+            user.calories;
+
+
+        document.getElementById(
+            "nutritionProtein"
+        ).textContent =
+            user.protein + "g";
+
+
+        document.getElementById(
+            "nutritionCarbs"
+        ).textContent =
+            user.carbs + "g";
+
+
+        document.getElementById(
+            "nutritionFat"
+        ).textContent =
+            user.fat + "g";
+    }
+
+
+    /* ==========================================
+       TRAINING PAGE
+    ========================================== */
+
+    function updateTrainingPage() {
+
+        document.getElementById(
+            "trainingFrequency"
+        ).textContent =
+            user.trainingDays +
+            " pass / vecka";
+
+
+        const names =
+            getWorkoutNames();
+
+
+        const days = [
+            "Måndag",
+            "Tisdag",
+            "Onsdag",
+            "Torsdag",
+            "Fredag",
+            "Lördag",
+            "Söndag"
+        ];
+
+
+        const container =
+            document.getElementById(
+                "trainingPageList"
+            );
+
+
+        container.innerHTML = "";
+
+
+        for (
+            let i = 0;
+            i < 7;
+            i++
+        ) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "day";
+
+
+            div.innerHTML = `
+
+                <div class="day-left">
+
+                    <div class="day-icon">
+                        ${
+                            names[i] === "Vila"
+                                ? "😴"
+                                : "🏋️"
+                        }
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            ${days[i]}
+                        </strong>
+
+                        <small>
+                            ${names[i]}
+                        </small>
+
+                    </div>
+
+                </div>
+
+                ${
+                    names[i] === "Vila"
+                        ? ""
+                        : "<span>›</span>"
+                }
+
+            `;
+
+
+            container.appendChild(div);
+        }
+    }
+
+
+    /* ==========================================
+       UPDATE WEIGHT
+    ========================================== */
+
+    function updateWeight() {
+
+        const newWeight =
+            Number(
+                document.getElementById(
+                    "newWeight"
+                ).value
+            );
+
+
+        if (!newWeight) {
+
+            alert(
+                "Skriv in din nya vikt."
+            );
+
+            return;
+        }
+
+
+        user.weight =
+            newWeight;
+
+
+        user.history.push({
+            date:
+                new Date()
+                    .toLocaleDateString(
+                        "sv-SE"
+                    ),
+
+            weight:
+                newWeight
+        });
+
+
+        saveUser();
+
+        updateDashboard();
+
+        document.getElementById(
+            "newWeight"
+        ).value = "";
+
+
+        alert(
+            "Din vikt har uppdaterats!"
+        );
+    }
+
+
+    /* ==========================================
+       PROGRESS PAGE
+    ========================================== */
+
+    function updateProgressPage() {
+
+        document.getElementById(
+            "progressStart"
+        ).textContent =
+            (
+                user.history.length
+                    ? user.history[0].weight
+                    : user.weight
+            ) + " kg";
+
+
+        document.getElementById(
+            "progressTarget"
+        ).textContent =
+            user.targetWeight + " kg";
+
+
+        document.getElementById(
+            "progressCurrent"
+        ).textContent =
+            user.weight + " kg";
+
+
+        const history =
+            document.getElementById(
+                "weightHistory"
+            );
+
+
+        history.innerHTML = "";
+
+
+        [...user.history]
+            .reverse()
+            .forEach(entry => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                row.className =
+                    "weight-row";
+
+
+                row.innerHTML = `
+
+                    <span>
+                        ${entry.date}
+                    </span>
+
+                    <span>
+                        ${entry.weight} kg
+                    </span>
+
+                `;
+
+
+                history.appendChild(row);
+            });
+    }
+
+
+    /* ==========================================
+       LOCAL STORAGE
+    ========================================== */
+
+    function saveUser() {
+
+        localStorage.setItem(
+            "fitplanUser",
+            JSON.stringify(user)
+        );
+    }
+
+
+    function loadUser() {
+
+        const saved =
+            localStorage.getItem(
+                "fitplanUser"
+            );
+
+
+        if (!saved) {
+            return;
+        }
+
+
+        try {
+
+            user =
+                JSON.parse(saved);
+
+
+            if (
+                user &&
+                user.calories
+            ) {
+
+                updateDashboard();
+
+                showPage(
+                    "dashboard"
+                );
+            }
+
+        } catch (error) {
+
+            console.log(
+                "Kunde inte läsa sparad plan."
+            );
+        }
+    }
+
+
+    /* ==========================================
+       START
+    ========================================== */
+
+    loadUser();
 
 </script>
 
 </body>
 </html>
+```
