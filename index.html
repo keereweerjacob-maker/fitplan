@@ -2564,10 +2564,14 @@ function swapMeal(dayIndex, mealIndex) {
   const currentMeal =
     weeklyPlan[dayIndex].meals[mealIndex];
 
+  if (!currentMeal) {
+    return;
+  }
+
   const options =
     getFilteredMeals(currentMeal.type)
       .filter(meal =>
-        meal.id !== currentMeal.id
+        String(meal.id) !== String(currentMeal.id)
       );
 
   if (!options.length) {
@@ -2578,11 +2582,8 @@ function swapMeal(dayIndex, mealIndex) {
     return;
   }
 
-
   /*
-    Välj en måltid slumpmässigt.
-    Sedan skalar vi den så att den ligger nära samma
-    kalorinivå som den gamla måltiden.
+    Välj en ny måltid.
   */
 
   const replacement =
@@ -2590,37 +2591,103 @@ function swapMeal(dayIndex, mealIndex) {
       Math.floor(Math.random() * options.length)
     ];
 
+  /*
+    Behåll ungefär samma kalorimängd som den gamla måltiden.
+  */
+
   const targetCalories =
-    currentMeal.calories;
+    Number(currentMeal.calories);
+
+  const replacementCalories =
+    Number(replacement.calories);
+
+  if (
+    !Number.isFinite(targetCalories) ||
+    !Number.isFinite(replacementCalories) ||
+    replacementCalories <= 0
+  ) {
+    console.error(
+      "Ogiltiga kalorier vid måltidsbyte:",
+      {
+        currentMeal,
+        replacement
+      }
+    );
+
+    return;
+  }
 
   const scale =
-    targetCalories / replacement.calories;
+    targetCalories / replacementCalories;
 
   weeklyPlan[dayIndex].meals[mealIndex] =
     scaleMeal(
       replacement,
-      Math.min(1.65, Math.max(0.60, scale))
+      Math.min(
+        1.65,
+        Math.max(0.60, scale)
+      )
     );
 
 
   /*
-    Optimera dagen efter bytet.
-
-    Vi behåller de nya måltiderna men låter motorn
-    finjustera portionsstorlekarna.
+    Hämta grundmåltiderna igen.
+    String() gör ID-jämförelsen säker även om
+    ena ID:t är text och det andra är ett nummer.
   */
 
   const selected =
-    weeklyPlan[dayIndex].meals.map(
-      meal => meals.find(m => m.id === meal.id)
+    weeklyPlan[dayIndex].meals.map(meal => {
+
+      const baseMeal =
+        meals.find(
+          m => String(m.id) === String(meal.id)
+        );
+
+      if (!baseMeal) {
+        console.error(
+          "Kunde inte hitta grundmåltid:",
+          meal.id,
+          meal
+        );
+      }
+
+      return baseMeal;
+    });
+
+
+  /*
+    Kontrollera att alla måltider hittades.
+  */
+
+  if (selected.some(meal => !meal)) {
+
+    alert(
+      "Kunde inte byta måltid korrekt. Försök igen."
     );
 
+    return;
+  }
+
+
+  /*
+    Behåll nuvarande portionsstorlekar.
+  */
 
   const scales =
-    weeklyPlan[dayIndex].meals.map(
-      meal => meal.scale
-    );
+    weeklyPlan[dayIndex].meals.map(meal => {
 
+      const value = Number(meal.scale);
+
+      return Number.isFinite(value)
+        ? value
+        : 1;
+    });
+
+
+  /*
+    Optimera dagen igen.
+  */
 
   const optimized =
     optimizeScales(
@@ -2628,6 +2695,23 @@ function swapMeal(dayIndex, mealIndex) {
       scales
     );
 
+  if (
+    !optimized ||
+    !optimized.meals ||
+    !optimized.totals
+  ) {
+    console.error(
+      "optimizeScales returnerade ingen giltig lösning.",
+      optimized
+    );
+
+    return;
+  }
+
+
+  /*
+    Uppdatera dagen.
+  */
 
   weeklyPlan[dayIndex].meals =
     optimized.meals;
@@ -2642,11 +2726,15 @@ function swapMeal(dayIndex, mealIndex) {
   saveData();
   renderAll();
 
-  document
-    .getElementById("kost")
-    .scrollIntoView({
+
+  const kost =
+    document.getElementById("kost");
+
+  if (kost) {
+    kost.scrollIntoView({
       behavior: "smooth"
     });
+  }
 }
 
 
