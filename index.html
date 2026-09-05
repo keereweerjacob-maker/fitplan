@@ -2475,17 +2475,23 @@ function renderNutrition() {
 
 
 function formatIngredientQty(value, unit) {
+  // Styckvaror, inklusive frukt
   if (unit === "st") {
-    // Avrunda till närmaste halva
     return formatNumber(Math.round(value * 2) / 2);
   }
 
-  if (value >= 1000 && (unit === "g" || unit === "ml")) {
-    return Math.round(value / 50) * 50;
+  // Gram
+  if (unit === "g") {
+    if (value >= 1000) return Math.round(value / 50) * 50;
+    if (value >= 100) return Math.round(value / 5) * 5;
+    return Math.round(value);
   }
 
-  if (value >= 100 && (unit === "g" || unit === "ml")) {
-    return Math.round(value / 5) * 5;
+  // Milliliter
+  if (unit === "ml") {
+    if (value >= 1000) return Math.round(value / 50) * 50;
+    if (value >= 100) return Math.round(value / 5) * 5;
+    return Math.round(value);
   }
 
   return formatNumber(value, 1);
