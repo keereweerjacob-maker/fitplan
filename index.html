@@ -2691,7 +2691,7 @@ function renderShoppingList() {
       <li>
         <strong>${escapeHtml(item.name)}</strong>
         –
-        ${formatIngredientQty(item.qty)}
+        ${formatIngredientQty(item.qty, item.unit)}
         ${item.unit}
       </li>
     `)
@@ -2713,7 +2713,7 @@ async function copyShoppingList() {
         )
       )
       .map(item =>
-        `${item.name}: ${formatIngredientQty(item.qty)} ${item.unit}`
+        `${item.name}: ${formatIngredientQty(item.qty, item.unit)} ${item.unit}`
       )
       .join("\n");
 
