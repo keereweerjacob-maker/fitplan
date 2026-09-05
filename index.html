@@ -2456,19 +2456,21 @@ function renderNutrition() {
           </div>
 
 
-          <ul class="ingredients">
+         <ul class="ingredients">
 
-            ${
-              meal.ingredients
-              .map(item => `
-                <li>
-                  ${escapeHtml(item.name)}:
-                  ${formatMealIngredientQty(item.qty, item.unit)}
-                  ${item.unit}
-                </li>
-              `)
-              .join("")
-            }
+  ${
+    meal.ingredients
+    .map(item => `
+      <li>
+        ${escapeHtml(item.name)}:
+        ${formatMealIngredientQty(item.qty, item.unit)}
+        ${item.unit}
+      </li>
+    `)
+    .join("")
+  }
+
+</ul>
 
           </ul>
 
