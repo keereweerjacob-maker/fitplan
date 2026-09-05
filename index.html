@@ -1614,29 +1614,19 @@ function getFilteredMeals(type) {
 ========================================================= */
 
 function scaleMeal(meal, scale) {
-
-  const safeScale = Math.min(
-    1.65,
-    Math.max(0.60, scale)
-  );
-
   return {
     ...meal,
-
-    scale: safeScale,
-
-    calories: meal.calories * safeScale,
-    protein: meal.protein * safeScale,
-    carbs: meal.carbs * safeScale,
-    fat: meal.fat * safeScale,
-
+    calories: Math.round(meal.calories * scale),
+    protein: Math.round(meal.protein * scale),
+    carbs: Math.round(meal.carbs * scale),
+    fat: Math.round(meal.fat * scale),
     ingredients: meal.ingredients.map(item => ({
       ...item,
-      qty: item.qty * safeScale
+      qty: item.qty * scale,
+      unit: item.unit
     }))
   };
 }
-
 
 /* =========================================================
    DAY CALCULATIONS
@@ -2474,20 +2464,38 @@ function renderNutrition() {
 }
 
 
-function formatIngredientQty(value, unit) {
-  // Styckvaror, inklusive frukt
+function formatMealIngredientQty(value, unit) {
   if (unit === "st") {
     return formatNumber(Math.round(value * 2) / 2);
   }
 
-  // Gram
   if (unit === "g") {
     if (value >= 1000) return Math.round(value / 50) * 50;
     if (value >= 100) return Math.round(value / 5) * 5;
     return Math.round(value);
   }
 
-  // Milliliter
+  if (unit === "ml") {
+    if (value >= 1000) return Math.round(value / 50) * 50;
+    if (value >= 100) return Math.round(value / 5) * 5;
+    return Math.round(value);
+  }
+
+  return formatNumber(value, 1);
+}
+
+
+function formatShoppingQty(value, unit) {
+  if (unit === "st") {
+    return Math.ceil(value);
+  }
+
+  if (unit === "g") {
+    if (value >= 1000) return Math.round(value / 50) * 50;
+    if (value >= 100) return Math.round(value / 5) * 5;
+    return Math.round(value);
+  }
+
   if (unit === "ml") {
     if (value >= 1000) return Math.round(value / 50) * 50;
     if (value >= 100) return Math.round(value / 5) * 5;
@@ -2643,38 +2651,27 @@ function generateNewWeek() {
 ========================================================= */
 
 function buildShoppingList() {
-
-  if (!weeklyPlan) {
-    return {};
-  }
+  if (!weeklyPlan) return {};
 
   const list = {};
 
   weeklyPlan.forEach(day => {
-
     day.meals.forEach(meal => {
-
       meal.ingredients.forEach(item => {
 
-        const key =
-          `${item.name}|${item.unit}`;
+        const key = `${item.name}|${item.unit}`;
 
         if (!list[key]) {
-
           list[key] = {
             name: item.name,
             unit: item.unit,
             qty: 0
           };
-
         }
 
         list[key].qty += item.qty;
-
       });
-
     });
-
   });
 
   return list;
@@ -2682,22 +2679,15 @@ function buildShoppingList() {
 
 
 function renderShoppingList() {
-
-  const list =
-    buildShoppingList();
+  const list = buildShoppingList();
 
   return Object.values(list)
-    .sort((a,b) =>
-      a.name.localeCompare(
-        b.name,
-        "sv"
-      )
-    )
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"))
     .map(item => `
       <li>
         <strong>${escapeHtml(item.name)}</strong>
         –
-        ${formatIngredientQty(item.qty, item.unit)}
+        ${formatShoppingQty(item.qty, item.unit)}
         ${item.unit}
       </li>
     `)
@@ -2706,36 +2696,20 @@ function renderShoppingList() {
 
 
 async function copyShoppingList() {
+  const list = buildShoppingList();
 
-  const list =
-    buildShoppingList();
-
-  const text =
-    Object.values(list)
-      .sort((a,b) =>
-        a.name.localeCompare(
-          b.name,
-          "sv"
-        )
-      )
-      .map(item =>
-        `${item.name}: ${formatIngredientQty(item.qty, item.unit)} ${item.unit}`
-      )
-      .join("\n");
-
+  const text = Object.values(list)
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"))
+    .map(item =>
+      `${item.name}: ${formatShoppingQty(item.qty, item.unit)} ${item.unit}`
+    )
+    .join("\n");
 
   try {
-
     await navigator.clipboard.writeText(text);
-
     alert("Inköpslistan är kopierad!");
-
   } catch {
-
-    alert(
-      "Kunde inte kopiera automatiskt. " +
-      "Markera listan och kopiera den manuellt."
-    );
+    alert("Kunde inte kopiera automatiskt. Markera listan och kopiera den manuellt.");
   }
 }
 
