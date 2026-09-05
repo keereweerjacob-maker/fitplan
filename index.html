@@ -2474,10 +2474,18 @@ function renderNutrition() {
 }
 
 
-function formatIngredientQty(value) {
+function formatIngredientQty(value, unit) {
+  if (unit === "st") {
+    // Avrunda till närmaste halva
+    return formatNumber(Math.round(value * 2) / 2);
+  }
 
-  if (value >= 10) {
-    return formatNumber(value);
+  if (value >= 1000 && (unit === "g" || unit === "ml")) {
+    return Math.round(value / 50) * 50;
+  }
+
+  if (value >= 100 && (unit === "g" || unit === "ml")) {
+    return Math.round(value / 5) * 5;
   }
 
   return formatNumber(value, 1);
