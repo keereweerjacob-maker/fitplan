@@ -2045,67 +2045,93 @@ function calculateWeeklyStats() {
 
 function createPlan() {
 
-  const calculated = calculateUserTargets();
+  try {
 
-  if (!calculated) {
-    return;
-  }
+    const calculated = calculateUserTargets();
 
-  user = calculated;
-
-  /*
-    Lägg in startvikt om det är första gången.
-  */
-
-  if (!weightHistory.length) {
-
-    weightHistory.push({
-      date: new Date().toLocaleDateString("sv-SE"),
-      weight: user.weight
-    });
-  }
-
-
-  /*
-    Visa laddningsliknande feedback.
-  */
-
-  const nutrition =
-    document.getElementById("nutritionContent");
-
-  nutrition.innerHTML = `
-    <div class="card">
-      <h3>Optimerar din vecka...</h3>
-      <p>
-        FitPlan testar olika måltidskombinationer och portionsstorlekar
-        för att komma så nära dina kalorier och ditt protein som möjligt.
-      </p>
-    </div>
-  `;
-
-  /*
-    setTimeout gör att webbläsaren hinner uppdatera UI:t.
-  */
-
-  setTimeout(() => {
-
-    weeklyPlan = generateWeeklyPlan();
-
-    if (!weeklyPlan) {
+    if (!calculated) {
+      console.error("calculateUserTargets() returnerade null.");
       return;
     }
 
-    saveData();
+    user = calculated;
 
-    renderAll();
-
-    document
-      .getElementById("dashboard")
-      .scrollIntoView({
-        behavior: "smooth"
+    if (!weightHistory.length) {
+      weightHistory.push({
+        date: new Date().toLocaleDateString("sv-SE"),
+        weight: user.weight
       });
+    }
 
-  }, 50);
+    const nutrition =
+      document.getElementById("nutritionContent");
+
+    nutrition.innerHTML = `
+      <div class="card">
+        <h3>Optimerar din vecka...</h3>
+        <p>
+          FitPlan testar olika måltidskombinationer och portionsstorlekar.
+        </p>
+      </div>
+    `;
+
+    setTimeout(() => {
+
+      try {
+
+        console.log("STARTAR generateWeeklyPlan()");
+        console.log("User:", user);
+        console.log("Meal types:", mealTypes);
+
+        weeklyPlan = generateWeeklyPlan();
+
+        console.log("weeklyPlan:", weeklyPlan);
+
+        if (!weeklyPlan) {
+
+          nutrition.innerHTML = `
+            <div class="card">
+              <h3>Kunde inte skapa kostplanen</h3>
+              <p>
+                Ingen giltig kostplan kunde skapas.
+              </p>
+            </div>
+          `;
+
+          return;
+        }
+
+        saveData();
+
+        renderAll();
+
+        document
+          .getElementById("dashboard")
+          .scrollIntoView({
+            behavior: "smooth"
+          });
+
+      } catch (error) {
+
+        console.error("FEL I GENERATE WEEKLY PLAN:", error);
+
+        nutrition.innerHTML = `
+          <div class="card">
+            <h3>Ett fel uppstod</h3>
+            <p>
+              ${error.message}
+            </p>
+          </div>
+        `;
+      }
+
+    }, 50);
+
+  } catch (error) {
+
+    console.error("FEL I CREATE PLAN:", error);
+
+  }
 }
 
 
