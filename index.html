@@ -1884,7 +1884,7 @@ function optimizeDay(recentIds = []) {
     utan att sidan känns långsam.
   */
 
-  const attempts = 700;
+  const attempts = 120;
 
   let best = null;
 
@@ -1942,14 +1942,12 @@ function optimizeDay(recentIds = []) {
 
 
     /*
-      Om vi redan är väldigt nära målet behöver vi inte
-      fortsätta lika länge.
+     99.5%+ match = tillräckligt bra.
     */
 
     if (
       best &&
-      best.score < 0.005
-    ) {
+      best.score < 0.005) {
       break;
     }
   }
