@@ -1757,23 +1757,24 @@ function optimizeScales(baseMeals, initialScales) {
   let bestTotals = calculateDayTotals(bestMeals);
   let bestScore = scoreTotals(bestTotals);
 
+  /*
+    Mindre sökintervall = mycket snabbare optimering.
+  */
+
   const adjustments = [
-    -0.15,
     -0.10,
     -0.05,
      0,
      0.05,
-     0.10,
-     0.15
+     0.10
   ];
 
   /*
-    Flera pass gör att vi successivt kan förbättra lösningen.
+    Två pass räcker normalt för att hitta en mycket bra
+    portionsstorlek.
   */
 
-  for (let pass = 0; pass < 3; pass++) {
-
-    let improved = false;
+  for (let pass = 0; pass < 2; pass++) {
 
     for (let i = 0; i < baseMeals.length; i++) {
 
@@ -1788,6 +1789,14 @@ function optimizeScales(baseMeals, initialScales) {
             currentScale + adjustment
           )
         );
+
+        /*
+          Om ingen förändring sker behöver vi inte räkna igen.
+        */
+
+        if (candidateScale === currentScale) {
+          continue;
+        }
 
         const candidateScales = [...scales];
 
@@ -1810,14 +1819,8 @@ function optimizeScales(baseMeals, initialScales) {
           bestMeals = candidateMeals;
           bestTotals = candidateTotals;
           bestScore = candidateScore;
-
-          improved = true;
         }
       }
-    }
-
-    if (!improved) {
-      break;
     }
   }
 
