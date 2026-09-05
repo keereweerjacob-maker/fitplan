@@ -1556,23 +1556,37 @@ function calculateUserTargets() {
 
 function mealContainsAvoidedFood(meal) {
 
-  if (!user || !user.avoidFoods) {
+  if (!user || !Array.isArray(user.avoidFoods)) {
     return false;
   }
 
   const ingredientText = meal.ingredients
-    .map(i => i.name.toLowerCase())
+    .map(i => String(i.name).toLowerCase())
     .join(" ");
 
-  return user.avoidFoods.some(food =>
-    ingredientText.includes(food)
-  );
+  return user.avoidFoods.some(food => {
+    const normalizedFood = String(food).trim().toLowerCase();
+
+    if (!normalizedFood) {
+      return false;
+    }
+
+    return ingredientText.includes(normalizedFood);
+  });
 }
+
 
 function getFilteredMeals(type) {
 
+  if (!user) {
+    return [];
+  }
+
   let list = meals.filter(meal => {
-    return meal.type === type && !mealContainsAvoidedFood(meal);
+    return (
+      meal.type === type &&
+      !mealContainsAvoidedFood(meal)
+    );
   });
 
   if (!list.length) {
@@ -1580,13 +1594,17 @@ function getFilteredMeals(type) {
   }
 
   if (user.diet === "vegetarian") {
+
     list = list.filter(meal =>
+      Array.isArray(meal.diet) &&
       meal.diet.includes("vegetarian")
     );
   }
 
   if (user.diet === "highprotein") {
+
     const highProtein = list.filter(meal =>
+      Array.isArray(meal.diet) &&
       meal.diet.includes("highprotein")
     );
 
@@ -1596,6 +1614,7 @@ function getFilteredMeals(type) {
   }
 
   if (user.diet === "budget") {
+
     const budget = list.filter(meal =>
       meal.cost === 1
     );
@@ -1607,7 +1626,6 @@ function getFilteredMeals(type) {
 
   return list;
 }
-
 
 /* =========================================================
    MEAL SCALING
