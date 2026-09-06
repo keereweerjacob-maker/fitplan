@@ -1756,7 +1756,27 @@ function scoreTotals(totals, meals = []) {
 
 function matchPercent(totals) {
 
-  const score = scoreTotals(totals);
+  const calorieError =
+    Math.abs(totals.calories - user.calories) /
+    Math.max(user.calories, 1);
+
+  const proteinError =
+    Math.abs(totals.protein - user.protein) /
+    Math.max(user.protein, 1);
+
+  const carbError =
+    Math.abs(totals.carbs - user.carbs) /
+    Math.max(user.carbs, 1);
+
+  const fatError =
+    Math.abs(totals.fat - user.fat) /
+    Math.max(user.fat, 1);
+
+  const score =
+    calorieError * 0.65 +
+    proteinError * 0.25 +
+    carbError * 0.05 +
+    fatError * 0.05;
 
   return Math.max(
     0,
@@ -1766,13 +1786,6 @@ function matchPercent(totals) {
     )
   );
 }
-
-
-/*
-  Fine-tuning:
-  Vi justerar varje måltid lite upp eller ner och ser om
-  dagens totala precision blir bättre.
-*/
 
 function optimizeScales(baseMeals, initialScales) {
 
