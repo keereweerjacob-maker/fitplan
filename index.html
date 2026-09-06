@@ -1845,7 +1845,7 @@ function optimizeScales(baseMeals, initialScales) {
           calculateDayTotals(candidateMeals);
 
         const candidateScore =
-          scoreTotals(candidateTotals);
+          let bestScore = scoreTotals(bestTotals);
 
         if (candidateScore < bestScore) {
 
