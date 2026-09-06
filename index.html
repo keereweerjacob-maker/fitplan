@@ -1699,15 +1699,15 @@ const calorieDistribution = {
   Protein är den näst viktigaste faktorn.
 */
 
-function scoreTotals(totals) {
+function scoreTotals(totals, meals = []) {
 
   const calorieError =
     Math.abs(totals.calories - user.calories) /
-    user.calories;
+    Math.max(user.calories, 1);
 
   const proteinError =
     Math.abs(totals.protein - user.protein) /
-    user.protein;
+    Math.max(user.protein, 1);
 
   const carbError =
     Math.abs(totals.carbs - user.carbs) /
@@ -1717,11 +1717,45 @@ function scoreTotals(totals) {
     Math.abs(totals.fat - user.fat) /
     Math.max(user.fat, 1);
 
+  /*
+    Genomsnittlig kostnad för dagens måltider.
+
+    cost:
+    1 = billig
+    2 = normal
+    3 = dyr
+  */
+
+  let costScore = 0;
+
+  if (meals.length) {
+
+    const totalCost =
+      meals.reduce(
+        (sum, meal) =>
+          sum + Number(meal.cost || 2),
+        0
+      );
+
+    const averageCost =
+      totalCost / meals.length;
+
+    /*
+      1 = 0
+      2 = 0.5
+      3 = 1
+    */
+
+    costScore =
+      (averageCost - 1) / 2;
+  }
+
   return (
-    calorieError * 0.65 +
+    calorieError * 0.60 +
     proteinError * 0.25 +
     carbError * 0.05 +
-    fatError * 0.05
+    fatError * 0.05 +
+    costScore * 0.05
   );
 }
 
