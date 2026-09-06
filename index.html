@@ -1789,11 +1789,9 @@ function optimizeScales(baseMeals, initialScales) {
   );
 
   let bestTotals = calculateDayTotals(bestMeals);
-  let bestScore = scoreTotals(bestTotals);
 
-  /*
-    Mindre sökintervall = mycket snabbare optimering.
-  */
+  let bestScore =
+    scoreTotals(bestTotals, bestMeals);
 
   const adjustments = [
     -0.10,
@@ -1802,11 +1800,6 @@ function optimizeScales(baseMeals, initialScales) {
      0.05,
      0.10
   ];
-
-  /*
-    Två pass räcker normalt för att hitta en mycket bra
-    portionsstorlek.
-  */
 
   for (let pass = 0; pass < 2; pass++) {
 
@@ -1824,10 +1817,6 @@ function optimizeScales(baseMeals, initialScales) {
           )
         );
 
-        /*
-          Om ingen förändring sker behöver vi inte räkna igen.
-        */
-
         if (candidateScale === currentScale) {
           continue;
         }
@@ -1842,10 +1831,13 @@ function optimizeScales(baseMeals, initialScales) {
         );
 
         const candidateTotals =
-          let bestScore = scoreTotals(bestTotals, bestMeals);
+          calculateDayTotals(candidateMeals);
 
         const candidateScore =
-  scoreTotals(candidateTotals, candidateMeals);
+          scoreTotals(
+            candidateTotals,
+            candidateMeals
+          );
 
         if (candidateScore < bestScore) {
 
@@ -1864,7 +1856,6 @@ function optimizeScales(baseMeals, initialScales) {
     score: bestScore
   };
 }
-
 
 /*
   Först väljer vi måltidskombinationer.
