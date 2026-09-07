@@ -2055,6 +2055,73 @@ function scoreWeeklyPlan(week) {
 
   }, 0);
 }
+
+  function generateWeeklyPlan() {
+
+  if (!user) {
+    return null;
+  }
+
+  const weeklyAttempts = 8;
+
+  let bestWeek = null;
+  let bestScore = Infinity;
+
+  for (
+    let attempt = 0;
+    attempt < weeklyAttempts;
+    attempt++
+  ) {
+
+    const week = [];
+    let recentIds = [];
+
+    for (let day = 1; day <= 7; day++) {
+
+      const optimized =
+        optimizeDay(recentIds);
+
+      if (!optimized) {
+        return null;
+      }
+
+      const dayData = {
+        day,
+        meals: optimized.meals,
+        totals: optimized.totals,
+        match: matchPercent(
+          optimized.totals
+        )
+      };
+
+      week.push(dayData);
+
+      recentIds = [
+        ...recentIds,
+        ...optimized.meals.map(
+          meal => meal.id
+        )
+      ];
+
+      recentIds =
+        recentIds.slice(-8);
+    }
+
+    const weekScore =
+      scoreWeeklyPlan(week);
+
+    if (
+      bestWeek === null ||
+      weekScore < bestScore
+    ) {
+
+      bestWeek = week;
+      bestScore = weekScore;
+    }
+  }
+
+  return bestWeek;
+}
 /* =========================================================
    WEEKLY STATS
 ========================================================= */
