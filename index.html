@@ -2042,6 +2042,19 @@ function scoreWeeklyPlan(week) {
   );
 }
 
+  function calculateWeeklyCost(week) {
+
+  return week.reduce((total, day) => {
+
+    return total +
+      day.meals.reduce(
+        (sum, meal) =>
+          sum + Number(meal.price || 0),
+        0
+      );
+
+  }, 0);
+}
 /* =========================================================
    WEEKLY STATS
 ========================================================= */
