@@ -2013,121 +2013,50 @@ function scoreWeeklyPlan(week) {
   }
 
   let nutritionScore = 0;
-  let totalCost = 0;
 
   for (const day of week) {
 
     nutritionScore +=
-      scoreTotals(day.totals, day.meals);
-
-    totalCost += day.meals.reduce(
-      (sum, meal) =>
-        sum + Number(meal.cost || 2),
-      0
-    );
+      scoreTotals(day.totals);
   }
 
   nutritionScore /= week.length;
 
-  /*
-    Kostnaden vägs in separat på veckonivå.
+  const weeklyCost =
+    calculateWeeklyCost(week);
 
-    1 = mycket billig
-    2 = normal
-    3 = dyr
+  const budget =
+    Number(user.weeklyBudget || 600);
+
+  /*
+    Budgetstraff.
+
+    Om veckan ligger under budget:
+    ingen extra bestraffning.
+
+    Om veckan går över budget:
+    desto mer över budget,
+    desto högre score.
   */
 
-  const averageCost =
-    totalCost /
-    (week.length * mealTypes.length);
+  let budgetPenalty = 0;
 
-  const costScore =
-    (averageCost - 1) / 2;
+  if (weeklyCost > budget) {
+
+    budgetPenalty =
+      (weeklyCost - budget) / budget;
+  }
 
   /*
-    Nutrition är viktigast.
-    Kostnad används som en extra optimering.
+    Nutrition är fortfarande viktigast.
+    Budgeten används för att styra bort
+    dyra veckoplaner.
   */
 
   return (
-    nutritionScore * 0.90 +
-    costScore * 0.10
+    nutritionScore * 0.85 +
+    budgetPenalty * 0.15
   );
-}
-function generateWeeklyPlan() {
-
-  if (!user) {
-    return null;
-  }
-
-  const weeklyAttempts = 8;
-
-  let bestWeek = null;
-  let bestScore = Infinity;
-
-  for (
-    let attempt = 0;
-    attempt < weeklyAttempts;
-    attempt++
-  ) {
-
-    const week = [];
-    let recentIds = [];
-
-    for (let day = 1; day <= 7; day++) {
-
-      const optimized =
-        optimizeDay(recentIds);
-
-      if (!optimized) {
-        return null;
-      }
-
-      const dayData = {
-        day,
-        meals: optimized.meals,
-        totals: optimized.totals,
-        match: matchPercent(
-          optimized.totals
-        )
-      };
-
-      week.push(dayData);
-
-      /*
-        Lägg till dagens måltider i recentIds.
-        Detta behåller variation mellan dagarna.
-      */
-
-      recentIds = [
-        ...recentIds,
-        ...optimized.meals.map(
-          meal => meal.id
-        )
-      ];
-
-      recentIds =
-        recentIds.slice(-8);
-    }
-
-    /*
-      Bedöm hela veckan.
-    */
-
-    const weekScore =
-      scoreWeeklyPlan(week);
-
-    if (
-      bestWeek === null ||
-      weekScore < bestScore
-    ) {
-
-      bestWeek = week;
-      bestScore = weekScore;
-    }
-  }
-
-  return bestWeek;
 }
 
 /* =========================================================
