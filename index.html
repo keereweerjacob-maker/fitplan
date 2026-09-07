@@ -1508,7 +1508,9 @@ function calculateUserTargets() {
   const activity = Number(document.getElementById("activity").value);
   const trainingDays = Number(document.getElementById("trainingDays").value);
   const diet = document.getElementById("diet").value;
-
+  
+  const weeklyBudget = 600;
+  
   if (!age || !height || !weight) {
     alert("Fyll i ålder, längd och vikt först.");
     return null;
@@ -1557,20 +1559,16 @@ function calculateUserTargets() {
   }
 
   return {
-    age,
-    gender,
-    height,
-    weight,
-    goal,
-    activity,
-    trainingDays,
-    diet,
-    avoidFoods: getAvoidFoods(),
-    bmr: round(bmr),
-    calories: round(calories),
-    protein: round(protein),
-    carbs: round(carbs),
-    fat: round(fat)
+  age,
+  gender,
+  height,
+  weight,
+  goal,
+  activity,
+  trainingDays,
+  diet,
+  weeklyBudget,
+  avoidFoods: getAvoidFoods(),
   };
 }
 
