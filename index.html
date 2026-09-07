@@ -1569,8 +1569,12 @@ function calculateUserTargets() {
   diet,
   weeklyBudget,
   avoidFoods: getAvoidFoods(),
-  };
-}
+  bmr: round(bmr),
+  calories: round(calories),
+  protein: round(protein),
+  carbs: round(carbs),
+  fat: round(fat)
+};
 
 
 /* =========================================================
