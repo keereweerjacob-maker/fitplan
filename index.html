@@ -2013,49 +2013,32 @@ function scoreWeeklyPlan(week) {
   }
 
   let nutritionScore = 0;
+  let totalCost = 0;
 
   for (const day of week) {
 
     nutritionScore +=
-      scoreTotals(day.totals);
+      scoreTotals(day.totals, day.meals);
+
+    totalCost += day.meals.reduce(
+      (sum, meal) =>
+        sum + Number(meal.cost || 2),
+      0
+    );
   }
 
   nutritionScore /= week.length;
 
-  const weeklyCost =
-    calculateWeeklyCost(week);
+  const averageCost =
+    totalCost /
+    (week.length * mealTypes.length);
 
-  const budget =
-    Number(user.weeklyBudget || 600);
-
-  /*
-    Budgetstraff.
-
-    Om veckan ligger under budget:
-    ingen extra bestraffning.
-
-    Om veckan går över budget:
-    desto mer över budget,
-    desto högre score.
-  */
-
-  let budgetPenalty = 0;
-
-  if (weeklyCost > budget) {
-
-    budgetPenalty =
-      (weeklyCost - budget) / budget;
-  }
-
-  /*
-    Nutrition är fortfarande viktigast.
-    Budgeten används för att styra bort
-    dyra veckoplaner.
-  */
+  const costScore =
+    (averageCost - 1) / 2;
 
   return (
-    nutritionScore * 0.85 +
-    budgetPenalty * 0.15
+    nutritionScore * 0.90 +
+    costScore * 0.10
   );
 }
 
