@@ -659,6 +659,35 @@ footer {
   .calendar-month { font-size: 19px; }
 }
 
+
+.training-calendar-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.training-calendar-summary > div {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(127,127,127,.08);
+  text-align: center;
+}
+.training-calendar-summary strong {
+  display: block;
+  font-size: 1.35rem;
+}
+.training-calendar-summary span {
+  display: block;
+  margin-top: 4px;
+  font-size: .85rem;
+  opacity: .75;
+}
+@media (max-width: 650px) {
+  .training-calendar-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -3663,7 +3692,55 @@ function trainingCalendarMonthName(date) {
   }).format(date);
 }
 
+
+function updateTrainingCalendarSummary() {
+  const plannedEl = document.getElementById("training-planned-count");
+  const completedEl = document.getElementById("training-completed-count");
+  const adherenceEl = document.getElementById("training-adherence");
+  const minutesEl = document.getElementById("training-minutes");
+
+  if (!plannedEl || !completedEl || !adherenceEl || !minutesEl) return;
+
+  const prefix = `${trainingCalendarYear}-${String(trainingCalendarMonth + 1).padStart(2, "0")}-`;
+  let planned = 0;
+  let completed = 0;
+  let minutes = 0;
+
+  Object.entries(trainingCalendarData || {}).forEach(([date, entry]) => {
+    if (!date.startsWith(prefix) || !entry) return;
+
+    if (entry.status === "planned" || entry.status === "completed") planned++;
+    if (entry.status === "completed") completed++;
+
+    const duration = Number(entry.duration);
+    if (Number.isFinite(duration) && duration > 0) minutes += duration;
+  });
+
+  const adherence = planned > 0 ? Math.round((completed / planned) * 100) : 0;
+
+  plannedEl.textContent = planned;
+  completedEl.textContent = completed;
+  adherenceEl.textContent = `${adherence}%`;
+  minutesEl.textContent = minutes;
+}
+
+function trainingTypeLabel(type) {
+  const labels = {
+    gym: "Gym",
+    strength: "Styrketräning",
+    cardio: "Kondition",
+    running: "Löpning",
+    walking: "Promenad",
+    football: "Fotboll",
+    cycling: "Cykling",
+    swimming: "Simning",
+    other: "Annat"
+  };
+  return labels[type] || type || "";
+}
+
 function renderTrainingCalendar() {
+  updateTrainingCalendarSummary();
   const monthEl = document.getElementById("trainingCalendarMonth");
   const gridEl = document.getElementById("trainingCalendarGrid");
   if (!monthEl || !gridEl) return;
@@ -3775,6 +3852,7 @@ function saveTrainingCalendarDay() {
   saveTrainingCalendarData(data);
   closeTrainingCalendar();
   renderTrainingCalendar();
+  updateTrainingCalendarSummary();
 }
 
 function closeTrainingCalendar() {
