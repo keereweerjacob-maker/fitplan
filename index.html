@@ -3757,16 +3757,26 @@ function getTrainingDayCalorieAdjustment(dateKey) {
   }
 
   // Träningsformer som räknas som hårdare träning
-  const hardTrainingTypes = new Set([
-    "cardio",
-    "running",
-    "football",
-    "cycling",
-    "swimming"
-  ]);
+ const hardTrainingTypes = new Set([
+  "cardio",
+  "kondition",
+  "running",
+  "löpning",
+  "football",
+  "fotboll",
+  "cycling",
+  "cykling",
+  "swimming",
+  "simning"
+]);
 
-  const isHardTraining =
-    hardTrainingTypes.has(entry.type);
+ const normalizedType =
+  String(entry.type || "")
+    .trim()
+    .toLowerCase();
+
+const isHardTraining =
+  hardTrainingTypes.has(normalizedType);
 
   let adjustment = settings.training;
 
