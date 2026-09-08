@@ -3692,7 +3692,111 @@ function trainingCalendarMonthName(date) {
   }).format(date);
 }
 
+/* ===== Träning -> kalorijustering ===== */
 
+const TRAINING_CALORIE_SETTINGS_KEY =
+  "fitplan_training_calorie_settings_v1";
+
+function getTrainingCalorieSettings() {
+  const defaults = {
+    rest: 0,
+    training: 300,
+    hard: 150
+  };
+
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(TRAINING_CALORIE_SETTINGS_KEY) || "null"
+    );
+
+    return {
+      rest: Number.isFinite(Number(saved?.rest))
+        ? Number(saved.rest)
+        : defaults.rest,
+
+      training: Number.isFinite(Number(saved?.training))
+        ? Number(saved.training)
+        : defaults.training,
+
+      hard: Number.isFinite(Number(saved?.hard))
+        ? Number(saved.hard)
+        : defaults.hard
+    };
+
+  } catch (error) {
+    console.warn(
+      "Kunde inte läsa kalorinställningar:",
+      error
+    );
+
+    return defaults;
+  }
+}
+
+
+function getTrainingEntryForDate(dateKey) {
+
+  const data = getTrainingCalendarData();
+
+  return data[dateKey] || null;
+}
+
+
+function getTrainingDayCalorieAdjustment(dateKey) {
+
+  const entry = getTrainingEntryForDate(dateKey);
+  const settings = getTrainingCalorieSettings();
+
+  // Ingen träning / vilodag
+  if (
+    !entry ||
+    !entry.status ||
+    entry.status === "none"
+  ) {
+    return settings.rest;
+  }
+
+  // Träningsformer som räknas som hårdare träning
+  const hardTrainingTypes = new Set([
+    "cardio",
+    "running",
+    "football",
+    "cycling",
+    "swimming"
+  ]);
+
+  const isHardTraining =
+    hardTrainingTypes.has(entry.type);
+
+  let adjustment = settings.training;
+
+  if (isHardTraining) {
+    adjustment += settings.hard;
+  }
+
+  return adjustment;
+}
+
+
+function applyTrainingDayCalories(
+  baseCalories,
+  dateKey
+) {
+
+  const base = Number(baseCalories);
+
+  if (!Number.isFinite(base)) {
+    return baseCalories;
+  }
+
+  const adjustment =
+    getTrainingDayCalorieAdjustment(dateKey);
+
+  return Math.max(
+    0,
+    Math.round(base + adjustment)
+  );
+}
 function updateTrainingCalendarSummary() {
   const plannedEl = document.getElementById("training-planned-count");
   const completedEl = document.getElementById("training-completed-count");
