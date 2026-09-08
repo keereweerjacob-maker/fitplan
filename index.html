@@ -2124,7 +2124,7 @@ function optimizeScales(baseMeals, initialScales) {
   kombination.
 */
 
-function optimizeDay(recentIds = []) {
+function optimizeDay(recentIds, dayNumber) {
 
   const candidates = {};
 
@@ -2191,8 +2191,8 @@ function optimizeDay(recentIds = []) {
     const initialScales = selected.map(meal => {
 
       const target =
-        user.calories *
-        calorieDistribution[meal.type];
+  user.calories *
+  calorieDistribution[meal.type];
 
       return target / meal.calories;
 
