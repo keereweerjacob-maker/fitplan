@@ -1958,11 +1958,16 @@ const calorieDistribution = {
   Protein är den näst viktigaste faktorn.
 */
 
-function scoreTotals(totals, meals = []) {
+function scoreTotals(totals, meals = [], calorieTarget = user.calories) {
+
+  const targetCalories =
+    Number.isFinite(Number(calorieTarget))
+      ? Number(calorieTarget)
+      : user.calories;
 
   const calorieError =
-    Math.abs(totals.calories - user.calories) /
-    Math.max(user.calories, 1);
+    Math.abs(totals.calories - targetCalories) /
+    Math.max(targetCalories, 1);
 
   const proteinError =
     Math.abs(totals.protein - user.protein) /
@@ -2005,11 +2010,19 @@ function scoreTotals(totals, meals = []) {
 
 
 
-function matchPercent(totals) {
+function matchPercent(
+  totals,
+  calorieTarget = user.calories
+) {
+
+  const targetCalories =
+    Number.isFinite(Number(calorieTarget))
+      ? Number(calorieTarget)
+      : user.calories;
 
   const calorieError =
-    Math.abs(totals.calories - user.calories) /
-    Math.max(user.calories, 1);
+    Math.abs(totals.calories - targetCalories) /
+    Math.max(targetCalories, 1);
 
   const proteinError =
     Math.abs(totals.protein - user.protein) /
@@ -2038,7 +2051,11 @@ function matchPercent(totals) {
   );
 }
 
-function optimizeScales(baseMeals, initialScales) {
+function optimizeScales(
+  baseMeals,
+  initialScales,
+  calorieTarget = user.calories
+) {
 
   let scales = [...initialScales];
 
@@ -2046,10 +2063,15 @@ function optimizeScales(baseMeals, initialScales) {
     scaleMeal(baseMeals[index], scale)
   );
 
-  let bestTotals = calculateDayTotals(bestMeals);
+  let bestTotals =
+    calculateDayTotals(bestMeals);
 
   let bestScore =
-    scoreTotals(bestTotals, bestMeals);
+    scoreTotals(
+      bestTotals,
+      bestMeals,
+      calorieTarget
+    );
 
   const adjustments = [
     -0.10,
@@ -2067,26 +2089,33 @@ function optimizeScales(baseMeals, initialScales) {
 
       for (const adjustment of adjustments) {
 
-        const candidateScale = Math.min(
-          1.65,
-          Math.max(
-            0.60,
-            currentScale + adjustment
-          )
-        );
+        const candidateScale =
+          Math.min(
+            1.65,
+            Math.max(
+              0.60,
+              currentScale + adjustment
+            )
+          );
 
         if (candidateScale === currentScale) {
           continue;
         }
 
-        const candidateScales = [...scales];
+        const candidateScales =
+          [...scales];
 
-        candidateScales[i] = candidateScale;
+        candidateScales[i] =
+          candidateScale;
 
-        const candidateMeals = candidateScales.map(
-          (scale, index) =>
-            scaleMeal(baseMeals[index], scale)
-        );
+        const candidateMeals =
+          candidateScales.map(
+            (scale, index) =>
+              scaleMeal(
+                baseMeals[index],
+                scale
+              )
+          );
 
         const candidateTotals =
           calculateDayTotals(candidateMeals);
@@ -2094,7 +2123,8 @@ function optimizeScales(baseMeals, initialScales) {
         const candidateScore =
           scoreTotals(
             candidateTotals,
-            candidateMeals
+            candidateMeals,
+            calorieTarget
           );
 
         if (candidateScore < bestScore) {
@@ -2114,7 +2144,6 @@ function optimizeScales(baseMeals, initialScales) {
     score: bestScore
   };
 }
-
 /*
   Först väljer vi måltidskombinationer.
   Sedan finjusterar vi portionsstorleken.
@@ -2217,10 +2246,11 @@ const initialScales = selected.map(meal => {
 
 
     const result =
-      optimizeScales(
-        selected,
-        clampedScales
-      );
+  optimizeScales(
+    selected,
+    clampedScales,
+    dailyCalories
+  );
 
 
     if (!best || result.score < best.score) {
@@ -2721,7 +2751,12 @@ function renderNutrition() {
             <h3>Dag ${day.day}</h3>
             <p>
               ${formatNumber(day.totals.calories)} /
-              ${formatNumber(user.calories)} kcal
+${formatNumber(
+  applyTrainingDayCalories(
+    user.calories,
+    getTrainingDateKeyForPlanDay(day.day)
+  )
+)} kcal
             </p>
           </div>
 
