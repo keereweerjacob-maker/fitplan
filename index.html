@@ -3823,6 +3823,11 @@ function applyTrainingDayCalories(
   dateKey
 ) {
 
+function applyTrainingDayCalories(
+  baseCalories,
+  dateKey
+) {
+
   const base = Number(baseCalories);
 
   if (!Number.isFinite(base)) {
@@ -3836,6 +3841,7 @@ function applyTrainingDayCalories(
     0,
     Math.round(base + adjustment)
   );
+} );
 }
   
 function updateTrainingCalendarSummary() {
