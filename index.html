@@ -3795,7 +3795,7 @@ const isHardTraining =
   return adjustment;
 }
 
- function getTrainingDateKeyForPlanDay(dayNumber) {
+function getTrainingDateKeyForPlanDay(dayNumber) {
 
   const today = new Date();
   const date = new Date(today);
@@ -3839,35 +3839,90 @@ function applyTrainingDayCalories(
 
 
 function updateTrainingCalendarSummary() {
-  
-function updateTrainingCalendarSummary() {
-  const plannedEl = document.getElementById("training-planned-count");
-  const completedEl = document.getElementById("training-completed-count");
-  const adherenceEl = document.getElementById("training-adherence");
-  const minutesEl = document.getElementById("training-minutes");
 
-  if (!plannedEl || !completedEl || !adherenceEl || !minutesEl) return;
+  const plannedEl =
+    document.getElementById("training-planned-count");
 
-  const prefix = `${trainingCalendarYear}-${String(trainingCalendarMonth + 1).padStart(2, "0")}-`;
+  const completedEl =
+    document.getElementById("training-completed-count");
+
+  const adherenceEl =
+    document.getElementById("training-adherence");
+
+  const minutesEl =
+    document.getElementById("training-minutes");
+
+  if (
+    !plannedEl ||
+    !completedEl ||
+    !adherenceEl ||
+    !minutesEl
+  ) {
+    return;
+  }
+
+  const year =
+    trainingCalendarDate.getFullYear();
+
+  const month =
+    trainingCalendarDate.getMonth();
+
+  const prefix =
+    `${year}-${String(month + 1).padStart(2, "0")}-`;
+
+  const data =
+    getTrainingCalendarData();
+
   let planned = 0;
   let completed = 0;
   let minutes = 0;
 
-  Object.entries(trainingCalendarData || {}).forEach(([date, entry]) => {
-    if (!date.startsWith(prefix) || !entry) return;
+  Object.entries(data).forEach(
+    ([date, entry]) => {
 
-    if (entry.status === "planned" || entry.status === "completed") planned++;
-    if (entry.status === "completed") completed++;
+      if (
+        !date.startsWith(prefix) ||
+        !entry
+      ) {
+        return;
+      }
 
-    const duration = Number(entry.duration);
-    if (Number.isFinite(duration) && duration > 0) minutes += duration;
-  });
+      if (
+        entry.status === "planned" ||
+        entry.status === "completed"
+      ) {
+        planned++;
+      }
 
-  const adherence = planned > 0 ? Math.round((completed / planned) * 100) : 0;
+      if (
+        entry.status === "completed"
+      ) {
+        completed++;
+      }
+
+      const duration =
+        Number(entry.duration);
+
+      if (
+        Number.isFinite(duration) &&
+        duration > 0
+      ) {
+        minutes += duration;
+      }
+    }
+  );
+
+  const adherence =
+    planned > 0
+      ? Math.round(
+          (completed / planned) * 100
+        )
+      : 0;
 
   plannedEl.textContent = planned;
   completedEl.textContent = completed;
-  adherenceEl.textContent = `${adherence}%`;
+  adherenceEl.textContent =
+    `${adherence}%`;
   minutesEl.textContent = minutes;
 }
 
