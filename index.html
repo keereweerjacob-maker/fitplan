@@ -2364,8 +2364,12 @@ function scoreWeeklyPlan(week) {
         meals: optimized.meals,
         totals: optimized.totals,
         match: matchPercent(
-          optimized.totals
-        )
+  optimized.totals,
+  applyTrainingDayCalories(
+    user.calories,
+    getTrainingDateKeyForPlanDay(day)
+  )
+)
       };
 
       week.push(dayData);
