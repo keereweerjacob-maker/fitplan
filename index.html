@@ -3824,6 +3824,11 @@ function getTrainingDateKeyForPlanDay(dayNumber) {
     return baseCalories;
   }
 
+  function applyTrainingDayCalories(
+  baseCalories,
+  dateKey
+) {
+    
   const adjustment =
     getTrainingDayCalorieAdjustment(dateKey);
 
