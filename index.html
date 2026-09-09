@@ -3798,7 +3798,6 @@ const isHardTraining =
  function getTrainingDateKeyForPlanDay(dayNumber) {
 
   const today = new Date();
-
   const date = new Date(today);
 
   const dayOfWeek =
@@ -3823,11 +3822,6 @@ function applyTrainingDayCalories(
   dateKey
 ) {
 
-function applyTrainingDayCalories(
-  baseCalories,
-  dateKey
-) {
-
   const base = Number(baseCalories);
 
   if (!Number.isFinite(base)) {
@@ -3841,8 +3835,10 @@ function applyTrainingDayCalories(
     0,
     Math.round(base + adjustment)
   );
-} );
 }
+
+
+function updateTrainingCalendarSummary() {
   
 function updateTrainingCalendarSummary() {
   const plannedEl = document.getElementById("training-planned-count");
