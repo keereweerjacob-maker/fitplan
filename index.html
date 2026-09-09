@@ -2188,15 +2188,23 @@ function optimizeDay(recentIds, dayNumber) {
       Startportionen baseras på kalorifördelningen.
     */
 
-    const initialScales = selected.map(meal => {
+    const dateKey =
+  getTrainingDateKeyForPlanDay(dayNumber);
 
-      const target =
-  user.calories *
-  calorieDistribution[meal.type];
+const dailyCalories =
+  applyTrainingDayCalories(
+    user.calories,
+    dateKey
+  );
 
-      return target / meal.calories;
+const initialScales = selected.map(meal => {
 
-    });
+  const target =
+    dailyCalories *
+    calorieDistribution[meal.type];
+
+  return target / meal.calories;
+});
 
 
     /*
@@ -3770,7 +3778,7 @@ function getTrainingDayCalorieAdjustment(dateKey) {
   "simning"
 ]);
 
- const normalizedType =
+const normalizedType =
   String(entry.type || "")
     .trim()
     .toLowerCase();
@@ -3788,10 +3796,27 @@ const isHardTraining =
 }
 
 
-function applyTrainingDayCalories(
-  baseCalories,
-  dateKey
-) {
+function getTrainingDateKeyForPlanDay(dayNumber) {
+
+  const today = new Date();
+
+  const date = new Date(today);
+
+  const dayOfWeek =
+    (today.getDay() + 6) % 7;
+
+  date.setDate(
+    today.getDate() -
+    dayOfWeek +
+    (dayNumber - 1)
+  );
+
+  return trainingCalendarDateKey(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+}
 
   const base = Number(baseCalories);
 
