@@ -2991,159 +2991,146 @@ function swapMeal(dayIndex, mealIndex) {
   }
 
   /*
-    Välj en ny måltid.
+    Räkna fram dagens riktiga kalorimål först.
   */
+  const dayNumber =
+    weeklyPlan[dayIndex].day;
 
-  const replacement =
-    options[
-      Math.floor(Math.random() * options.length)
-    ];
-
-  /*
-    Behåll ungefär samma kalorimängd som den gamla måltiden.
-  */
-
-  const targetCalories =
-    Number(currentMeal.calories);
-
-  const replacementCalories =
-    Number(replacement.calories);
-
-  if (
-    !Number.isFinite(targetCalories) ||
-    !Number.isFinite(replacementCalories) ||
-    replacementCalories <= 0
-  ) {
-    console.error(
-      "Ogiltiga kalorier vid måltidsbyte:",
-      {
-        currentMeal,
-        replacement
-      }
+  const dailyCalories =
+    applyTrainingDayCalories(
+      user.calories,
+      getTrainingDateKeyForPlanDay(dayNumber)
     );
 
-    return;
-  }
+  /*
+    Testa alla möjliga ersättningsmåltider och välj den
+    som ger bäst matchning för hela dagen.
+  */
+  const originalMeals =
+    weeklyPlan[dayIndex].meals;
 
-  const scale =
-    targetCalories / replacementCalories;
+  const originalScales =
+    originalMeals.map(meal => {
+      const value = Number(meal.scale);
+      return Number.isFinite(value) ? value : 1;
+    });
 
-  weeklyPlan[dayIndex].meals[mealIndex] =
-    scaleMeal(
-      replacement,
-      Math.min(
-        1.65,
-        Math.max(0.60, scale)
+  const originalSelected =
+    originalMeals.map(meal =>
+      meals.find(
+        m => String(m.id) === String(meal.id)
       )
     );
 
-
-  /*
-    Hämta grundmåltiderna igen.
-    String() gör ID-jämförelsen säker även om
-    ena ID:t är text och det andra är ett nummer.
-  */
-
-  const selected =
-    weeklyPlan[dayIndex].meals.map(meal => {
-
-      const baseMeal =
-        meals.find(
-          m => String(m.id) === String(meal.id)
-        );
-
-      if (!baseMeal) {
-        console.error(
-          "Kunde inte hitta grundmåltid:",
-          meal.id,
-          meal
-        );
-      }
-
-      return baseMeal;
-    });
-
-
-  /*
-    Kontrollera att alla måltider hittades.
-  */
-
-  if (selected.some(meal => !meal)) {
-
-    alert(
-      "Kunde inte byta måltid korrekt. Försök igen."
-    );
-
-    return;
-  }
-
-
-  /*
-    Behåll nuvarande portionsstorlekar.
-  */
-
-  const scales =
-    weeklyPlan[dayIndex].meals.map(meal => {
-
-      const value = Number(meal.scale);
-
-      return Number.isFinite(value)
-        ? value
-        : 1;
-    });
-
-
-  /*
-    Optimera dagen igen.
-  */
-
-  const dayNumber =
-  weeklyPlan[dayIndex].day;
-
-const dailyCalories =
-  applyTrainingDayCalories(
-    user.calories,
-    getTrainingDateKeyForPlanDay(dayNumber)
-  );
-
-const optimized =
-  optimizeScales(
-    selected,
-    scales,
-    dailyCalories
-  );
-
-  if (
-    !optimized ||
-    !optimized.meals ||
-    !optimized.totals
-  ) {
+  if (originalSelected.some(meal => !meal)) {
     console.error(
-      "optimizeScales returnerade ingen giltig lösning.",
-      optimized
+      "Kunde inte hitta grundmåltid för måltidsbyte."
     );
-
     return;
   }
 
+  const originalMatch =
+    Number(weeklyPlan[dayIndex].match) ||
+    matchPercent(
+      weeklyPlan[dayIndex].totals,
+      dailyCalories
+    );
+
+  let replacement = null;
+  let bestReplacementMatch = -Infinity;
+  let bestOptimized = null;
+
+  for (const candidate of options) {
+
+    const candidateCalories =
+      Number(candidate.calories);
+
+    if (
+      !Number.isFinite(candidateCalories) ||
+      candidateCalories <= 0
+    ) {
+      continue;
+    }
+
+    const candidateMeals =
+      [...originalSelected];
+
+    candidateMeals[mealIndex] = candidate;
+
+    const candidateScales =
+      [...originalScales];
+
+    const currentCalories =
+      Number(originalMeals[mealIndex].calories);
+
+    if (Number.isFinite(currentCalories)) {
+      candidateScales[mealIndex] =
+        Math.min(
+          1.65,
+          Math.max(
+            0.60,
+            currentCalories / candidateCalories
+          )
+        );
+    }
+
+    const optimizedCandidate =
+      optimizeScales(
+        candidateMeals,
+        candidateScales,
+        dailyCalories
+      );
+
+    if (
+      !optimizedCandidate ||
+      !optimizedCandidate.totals
+    ) {
+      continue;
+    }
+
+    const candidateMatch =
+      matchPercent(
+        optimizedCandidate.totals,
+        dailyCalories
+      );
+
+    if (
+      candidateMatch >= bestReplacementMatch
+    ) {
+      bestReplacementMatch = candidateMatch;
+      replacement = candidate;
+      bestOptimized = optimizedCandidate;
+    }
+  }
 
   /*
-    Uppdatera dagen.
+    Om inget alternativ är bättre än nuvarande plan,
+    avbryt bytet i stället för att försämra dagen.
   */
+  if (
+    !replacement ||
+    bestReplacementMatch < originalMatch
+  ) {
+    return;
+  }
+
+  /*
+    Använd exakt den lösning som redan testades och vann.
+    Vi optimerar inte en andra gång, eftersom den andra
+    optimeringen annars kan ge ett slumpmässigt sämre resultat.
+  */
+  if (!bestOptimized) {
+    return;
+  }
 
   weeklyPlan[dayIndex].meals =
-    optimized.meals;
+    bestOptimized.meals;
 
- weeklyPlan[dayIndex].totals =
-  optimized.totals;
+  weeklyPlan[dayIndex].totals =
+    bestOptimized.totals;
 
-
-weeklyPlan[dayIndex].match =
-  matchPercent(
-    optimized.totals,
-    dailyCalories
-  );
-
+  weeklyPlan[dayIndex].match =
+    bestReplacementMatch;
 
   saveData();
   renderAll();
