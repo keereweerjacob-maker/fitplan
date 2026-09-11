@@ -3097,11 +3097,21 @@ function swapMeal(dayIndex, mealIndex) {
     Optimera dagen igen.
   */
 
-  const optimized =
-    optimizeScales(
-      selected,
-      scales
-    );
+  const dayNumber =
+  weeklyPlan[dayIndex].day;
+
+const dailyCalories =
+  applyTrainingDayCalories(
+    user.calories,
+    getTrainingDateKeyForPlanDay(dayNumber)
+  );
+
+const optimized =
+  optimizeScales(
+    selected,
+    scales,
+    dailyCalories
+  );
 
   if (
     !optimized ||
@@ -3135,6 +3145,24 @@ const dailyCalories =
     user.calories,
     getTrainingDateKeyForPlanDay(dayNumber)
   );
+
+const optimized =
+  optimizeScales(
+    selected,
+    scales,
+    dailyCalories
+  );
+
+if (!optimized) {
+  alert("Kunde inte optimera måltiden.");
+  return;
+}
+
+weeklyPlan[dayIndex].meals[mealIndex] =
+  optimized.meals[mealIndex];
+
+weeklyPlan[dayIndex].totals =
+  optimized.totals;
 
 weeklyPlan[dayIndex].match =
   matchPercent(
