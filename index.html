@@ -2291,8 +2291,15 @@ function scoreWeeklyPlan(week) {
 
   for (const day of week) {
 
-    nutritionScore +=
-      scoreTotals(day.totals, day.meals);
+   nutritionScore +=
+  scoreTotals(
+    day.totals,
+    day.meals,
+    applyTrainingDayCalories(
+      user.calories,
+      getTrainingDateKeyForPlanDay(day.day)
+    )
+  );
 
     totalCost += day.meals.reduce(
       (sum, meal) =>
@@ -3117,11 +3124,23 @@ function swapMeal(dayIndex, mealIndex) {
   weeklyPlan[dayIndex].meals =
     optimized.meals;
 
-  weeklyPlan[dayIndex].totals =
-    optimized.totals;
+ weeklyPlan[dayIndex].totals =
+  optimized.totals;
 
-  weeklyPlan[dayIndex].match =
-    matchPercent(optimized.totals);
+const dayNumber =
+  weeklyPlan[dayIndex].day;
+
+const dailyCalories =
+  applyTrainingDayCalories(
+    user.calories,
+    getTrainingDateKeyForPlanDay(dayNumber)
+  );
+
+weeklyPlan[dayIndex].match =
+  matchPercent(
+    optimized.totals,
+    dailyCalories
+  );
 
 
   saveData();
