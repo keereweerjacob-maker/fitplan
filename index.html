@@ -327,6 +327,41 @@ textarea {
   margin-bottom: 18px;
 }
 
+.day-training-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.day-training-badge,
+.day-rest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+}
+
+.day-training-badge {
+  background: rgba(57, 217, 138, 0.10);
+  color: var(--green);
+}
+
+.day-rest-badge {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+}
+
+.day-target {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
 .day-header h3 {
   margin: 0;
 }
@@ -1958,28 +1993,45 @@ const calorieDistribution = {
   Protein är den näst viktigaste faktorn.
 */
 
-function scoreTotals(totals, meals = [], calorieTarget = user.calories) {
+function getDailyMacroTargets(calorieTarget = user.calories) {
 
   const targetCalories =
     Number.isFinite(Number(calorieTarget))
       ? Number(calorieTarget)
       : user.calories;
 
+  const calorieRatio =
+    targetCalories / Math.max(user.calories, 1);
+
+  return {
+    calories: targetCalories,
+    protein: user.protein * calorieRatio,
+    carbs: user.carbs * calorieRatio,
+    fat: user.fat * calorieRatio
+  };
+}
+
+
+function scoreTotals(totals, meals = [], calorieTarget = user.calories) {
+
+  const targets =
+    getDailyMacroTargets(calorieTarget);
+
   const calorieError =
-    Math.abs(totals.calories - targetCalories) /
-    Math.max(targetCalories, 1);
+    Math.abs(totals.calories - targets.calories) /
+    Math.max(targets.calories, 1);
 
   const proteinError =
-    Math.abs(totals.protein - user.protein) /
-    Math.max(user.protein, 1);
+    Math.abs(totals.protein - targets.protein) /
+    Math.max(targets.protein, 1);
 
   const carbError =
-    Math.abs(totals.carbs - user.carbs) /
-    Math.max(user.carbs, 1);
+    Math.abs(totals.carbs - targets.carbs) /
+    Math.max(targets.carbs, 1);
 
   const fatError =
-    Math.abs(totals.fat - user.fat) /
-    Math.max(user.fat, 1);
+    Math.abs(totals.fat - targets.fat) /
+    Math.max(targets.fat, 1);
 
   let costScore = 0;
 
@@ -2024,17 +2076,34 @@ function matchPercent(
     Math.abs(totals.calories - targetCalories) /
     Math.max(targetCalories, 1);
 
+  /*
+    På träningsdagar höjs kalorimålet. För att matchningen ska
+    bedöma dagen mot det nya energimålet skalar vi makromålen
+    proportionellt. Vilodagar påverkas inte eftersom ratio då är 1.
+  */
+  const macroTargets =
+    getDailyMacroTargets(targetCalories);
+
+  const targetProtein =
+    macroTargets.protein;
+
+  const targetCarbs =
+    macroTargets.carbs;
+
+  const targetFat =
+    macroTargets.fat;
+
   const proteinError =
-    Math.abs(totals.protein - user.protein) /
-    Math.max(user.protein, 1);
+    Math.abs(totals.protein - targetProtein) /
+    Math.max(targetProtein, 1);
 
   const carbError =
-    Math.abs(totals.carbs - user.carbs) /
-    Math.max(user.carbs, 1);
+    Math.abs(totals.carbs - targetCarbs) /
+    Math.max(targetCarbs, 1);
 
   const fatError =
-    Math.abs(totals.fat - user.fat) /
-    Math.max(user.fat, 1);
+    Math.abs(totals.fat - targetFat) /
+    Math.max(targetFat, 1);
 
   const score =
     calorieError * 0.65 +
@@ -2158,32 +2227,58 @@ function optimizeScales(
   kombination.
 */
 
-function pickMealForCalorieTarget(list, targetCalories, highCalorieMode) {
+function pickMealForCalorieTarget(
+  list,
+  targetCalories,
+  highCalorieMode,
+  targetProtein = user.protein
+) {
 
   if (!highCalorieMode || list.length <= 1) {
     return list[Math.floor(Math.random() * list.length)];
   }
 
   /*
-    När dagens kalorimål är ovanligt högt prioriterar vi måltider
-    som faktiskt har tillräckligt med kalorier för att kunna nå målet
-    inom FitPlans maxportion på 1.65x.
+    Vid höga kalorimål räcker det inte att bara välja den mest
+    kaloririka måltiden. Om vi gör det riskerar vi att proteinmängden
+    drar iväg kraftigt.
 
-    Det är en mjuk viktning, inte ett hårt filter. Protein, kostnad,
-    variation och övriga regler får därför fortfarande påverka valet.
+    Därför väger vi nu två saker samtidigt:
+    1. Hur bra måltiden kan hjälpa oss nå kalorimålet inom 1.65x.
+    2. Hur nära måltidens protein/kcal-förhållande ligger användarens
+       önskade protein/kcal-förhållande.
+
+    På så sätt kan FitPlan hitta kaloritäta måltider utan att automatiskt
+    välja de mest proteinrika alternativen.
   */
+  const desiredProteinDensity =
+    Number(targetProtein || 0) / Math.max(Number(targetCalories || 0), 1);
+
   const weights = list.map(meal => {
 
-    const maxCalories =
-      Number(meal.calories || 0) * 1.65;
+    const calories = Math.max(Number(meal.calories || 0), 1);
+    const protein = Math.max(Number(meal.protein || 0), 0);
 
-    const ratio =
-      maxCalories / Math.max(targetCalories, 1);
+    const maxCalories = calories * 1.65;
+    const calorieRatio =
+      maxCalories / Math.max(Number(targetCalories || 0), 1);
 
-    return Math.max(
-      0.25,
-      Math.min(4, ratio)
-    );
+    /*
+      Prioritera måltider som har tillräcklig kaloripotential, men
+      undvik att låta extremt hög proteinmängd bli en fördel.
+    */
+    const calorieFit =
+      Math.max(0.25, Math.min(2.5, calorieRatio));
+
+    const proteinDensity = protein / calories;
+    const densityDifference =
+      Math.abs(proteinDensity - desiredProteinDensity) /
+      Math.max(desiredProteinDensity, 0.001);
+
+    const proteinFit =
+      1 / (1 + densityDifference * 1.5);
+
+    return Math.pow(calorieFit, 1.5) * proteinFit;
   });
 
   const totalWeight =
@@ -2222,7 +2317,8 @@ function optimizeDay(recentIds, dayNumber) {
     ligger tydligt över användarens normala kaloribehov.
   */
   const highCalorieMode =
-    dailyCalories >= user.calories * 1.15;
+    dailyCalories >= user.calories * 1.10 ||
+    dailyCalories >= 3000;
 
   for (const type of mealTypes) {
 
@@ -2276,10 +2372,16 @@ function optimizeDay(recentIds, dayNumber) {
       const targetForMeal =
         dailyCalories * calorieDistribution[type];
 
+      const targetProteinForMeal =
+        user.protein *
+        (dailyCalories / Math.max(user.calories, 1)) *
+        calorieDistribution[type];
+
       return pickMealForCalorieTarget(
         list,
         targetForMeal,
-        highCalorieMode
+        highCalorieMode,
+        targetProteinForMeal
       );
     });
 
@@ -2859,6 +2961,34 @@ function renderNutrition() {
     const matchClass =
       getMatchClass(day.match);
 
+    const dayDateKey =
+      getTrainingDateKeyForPlanDay(day.day);
+
+    const trainingEntry =
+      getTrainingEntryForDate(dayDateKey);
+
+    const isTrainingDay =
+      !!trainingEntry &&
+      !!trainingEntry.status &&
+      trainingEntry.status !== "none";
+
+    const dailyCalorieTarget =
+      applyTrainingDayCalories(
+        user.calories,
+        dayDateKey
+      );
+
+    const dailyMacroTargets =
+      getDailyMacroTargets(dailyCalorieTarget);
+
+    const trainingLabel =
+      isTrainingDay
+        ? `${trainingEntry.status === "completed" ? "✓" : "●"} ${escapeHtml(trainingEntry.type || "Träning")}`
+        : "Vila";
+
+    const targetProtein =
+      dailyMacroTargets.protein;
+
     html += `
 
       <div class="card day-card">
@@ -2869,13 +2999,17 @@ function renderNutrition() {
             <h3>Dag ${day.day}</h3>
             <p>
               ${formatNumber(day.totals.calories)} /
-${formatNumber(
-  applyTrainingDayCalories(
-    user.calories,
-    getTrainingDateKeyForPlanDay(day.day)
-  )
-)} kcal
+              ${formatNumber(dailyCalorieTarget)} kcal
             </p>
+            <div class="day-target">
+              Mål: ${formatNumber(dailyCalorieTarget)} kcal ·
+              ${formatNumber(targetProtein)} g protein
+            </div>
+            <div class="day-training-info">
+              <span class="${isTrainingDay ? "day-training-badge" : "day-rest-badge"}">
+                ${trainingLabel}
+              </span>
+            </div>
           </div>
 
           <div class="precision">
@@ -2891,7 +3025,7 @@ ${formatNumber(
             </div>
 
             <div style="color:var(--muted);font-size:13px">
-              protein / ${formatNumber(user.protein)} g
+              protein / ${formatNumber(targetProtein)} g
             </div>
 
           </div>
