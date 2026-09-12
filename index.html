@@ -2073,15 +2073,20 @@ function optimizeScales(
       calorieTarget
     );
 
+  // Finare steg gör att FitPlan kan komma närmare både
+  // kalorimålet och proteinmålet utan att portionsstorlekarna
+  // behöver bli orimligt stora eller små.
   const adjustments = [
-    -0.10,
     -0.05,
+    -0.025,
+    -0.01,
      0,
-     0.05,
-     0.10
+     0.01,
+     0.025,
+     0.05
   ];
 
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 3; pass++) {
 
     for (let i = 0; i < baseMeals.length; i++) {
 
@@ -2196,7 +2201,7 @@ function optimizeDay(recentIds, dayNumber) {
     utan att sidan känns långsam.
   */
 
-  const attempts = 120;
+  const attempts = 240;
 
   let best = null;
 
