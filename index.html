@@ -2158,9 +2158,71 @@ function optimizeScales(
   kombination.
 */
 
+function pickMealForCalorieTarget(list, targetCalories, highCalorieMode) {
+
+  if (!highCalorieMode || list.length <= 1) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  /*
+    När dagens kalorimål är ovanligt högt prioriterar vi måltider
+    som faktiskt har tillräckligt med kalorier för att kunna nå målet
+    inom FitPlans maxportion på 1.65x.
+
+    Det är en mjuk viktning, inte ett hårt filter. Protein, kostnad,
+    variation och övriga regler får därför fortfarande påverka valet.
+  */
+  const weights = list.map(meal => {
+
+    const maxCalories =
+      Number(meal.calories || 0) * 1.65;
+
+    const ratio =
+      maxCalories / Math.max(targetCalories, 1);
+
+    return Math.max(
+      0.25,
+      Math.min(4, ratio)
+    );
+  });
+
+  const totalWeight =
+    weights.reduce((sum, weight) => sum + weight, 0);
+
+  let random = Math.random() * totalWeight;
+
+  for (let i = 0; i < list.length; i++) {
+
+    random -= weights[i];
+
+    if (random <= 0) {
+      return list[i];
+    }
+  }
+
+  return list[list.length - 1];
+}
+
+
 function optimizeDay(recentIds, dayNumber) {
 
   const candidates = {};
+
+  const dateKey =
+    getTrainingDateKeyForPlanDay(dayNumber);
+
+  const dailyCalories =
+    applyTrainingDayCalories(
+      user.calories,
+      dateKey
+    );
+
+  /*
+    High-calorie mode används bara när träningsdagen eller målet
+    ligger tydligt över användarens normala kaloribehov.
+  */
+  const highCalorieMode =
+    dailyCalories >= user.calories * 1.15;
 
   for (const type of mealTypes) {
 
@@ -2197,13 +2259,13 @@ function optimizeDay(recentIds, dayNumber) {
 
   /*
     Vi testar många slumpmässiga kombinationer.
-    700 är tillräckligt mycket för att hitta bra kombinationer
-    utan att sidan känns långsam.
+    240 försök ger bra variation utan att göra sidan onödigt långsam.
   */
 
   const attempts = 240;
 
-  let best = null;
+  let bestFeasible = null;
+  let bestFallback = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
 
@@ -2211,17 +2273,24 @@ function optimizeDay(recentIds, dayNumber) {
 
       const list = candidates[type];
 
-      return list[
-        Math.floor(Math.random() * list.length)
-      ];
+      const targetForMeal =
+        dailyCalories * calorieDistribution[type];
 
+      return pickMealForCalorieTarget(
+        list,
+        targetForMeal,
+        highCalorieMode
+      );
     });
 
     /*
-      Kontrollera först om kombinationen överhuvudtaget kan nå
-      dagens kalorimål inom FitPlans portionsgränser.
-      Om max 1.65x fortfarande ger för lite kalorier skippar vi
-      kombinationen direkt och låter försöken hitta en bättre bas.
+      Beräkna hur mycket kalorier kombinationen maximalt och minimalt
+      kan ge inom portionsgränserna 0.60–1.65.
+
+      V17 använde detta som ett hårt filter. I V18 använder vi det
+      istället som en mjuk feasibility-bedömning. Då kan FitPlan
+      fortfarande hitta den bästa möjliga planen även om ett extremt
+      kalorimål inte går att nå exakt.
     */
     const maxPossibleCalories =
       selected.reduce(
@@ -2235,36 +2304,18 @@ function optimizeDay(recentIds, dayNumber) {
         0
       );
 
-    const dateKey =
-      getTrainingDateKeyForPlanDay(dayNumber);
-
-    const dailyCalories =
-      applyTrainingDayCalories(
-        user.calories,
-        dateKey
-      );
-
-    if (
-      maxPossibleCalories < dailyCalories ||
-      minPossibleCalories > dailyCalories
-    ) {
-      continue;
-    }
-
-
-    /*
-      Startportionen baseras på kalorifördelningen.
-    */
+    const feasibilityGap =
+      Math.max(0, dailyCalories - maxPossibleCalories) +
+      Math.max(0, minPossibleCalories - dailyCalories);
 
     const initialScales = selected.map(meal => {
 
-  const target =
-    dailyCalories *
-    calorieDistribution[meal.type];
+      const target =
+        dailyCalories *
+        calorieDistribution[meal.type];
 
-  return target / meal.calories;
-});
-
+      return target / Math.max(Number(meal.calories || 0), 1);
+    });
 
     /*
       Begränsa extrema portionsstorlekar.
@@ -2274,36 +2325,61 @@ function optimizeDay(recentIds, dayNumber) {
       scale => Math.min(1.65, Math.max(0.60, scale))
     );
 
-
     const result =
-  optimizeScales(
-    selected,
-    clampedScales,
-    dailyCalories
-  );
+      optimizeScales(
+        selected,
+        clampedScales,
+        dailyCalories
+      );
 
+    const candidate = {
+      ...result,
+      baseMeals: selected,
+      maxPossibleCalories,
+      minPossibleCalories,
+      feasibilityGap
+    };
 
-    if (!best || result.score < best.score) {
-
-      best = {
-        ...result,
-        baseMeals: selected
-      };
-    }
-
-
-    /*
-     99.5%+ match = tillräckligt bra.
-    */
+    const isFeasible =
+      maxPossibleCalories >= dailyCalories &&
+      minPossibleCalories <= dailyCalories;
 
     if (
-      best &&
-      best.score < 0.005) {
+      isFeasible &&
+      (!bestFeasible || candidate.score < bestFeasible.score)
+    ) {
+      bestFeasible = candidate;
+    }
+
+    /*
+      Om ingen kombination är fullt genomförbar sparar vi ändå den
+      kombination som kommer närmast målet. Detta förhindrar att en
+      högkaloriprofil plötsligt får "ingen plan" bara för att databasen
+      saknar tillräckligt kaloritäta måltider.
+    */
+    if (
+      !bestFallback ||
+      candidate.feasibilityGap < bestFallback.feasibilityGap ||
+      (
+        candidate.feasibilityGap === bestFallback.feasibilityGap &&
+        candidate.score < bestFallback.score
+      )
+    ) {
+      bestFallback = candidate;
+    }
+
+    /*
+      99.5%+ match = tillräckligt bra.
+    */
+    if (
+      bestFeasible &&
+      bestFeasible.score < 0.005
+    ) {
       break;
     }
   }
 
-  return best;
+  return bestFeasible || bestFallback;
 }
 
 
