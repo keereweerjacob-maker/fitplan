@@ -2000,10 +2000,10 @@ function scoreTotals(totals, meals = [], calorieTarget = user.calories) {
   }
 
   return (
-    calorieError * 0.60 +
-    proteinError * 0.25 +
-    carbError * 0.05 +
-    fatError * 0.05 +
+    calorieError * 0.55 +
+    proteinError * 0.35 +
+    carbError * 0.025 +
+    fatError * 0.025 +
     costScore * 0.05
   );
 }
@@ -2037,8 +2037,8 @@ function matchPercent(
     Math.max(user.fat, 1);
 
   const score =
-    calorieError * 0.65 +
-    proteinError * 0.25 +
+    calorieError * 0.55 +
+    proteinError * 0.35 +
     carbError * 0.05 +
     fatError * 0.05;
 
@@ -2501,7 +2501,8 @@ function createPlan() {
             <div class="card">
               <h3>Kunde inte skapa kostplanen</h3>
               <p>
-                Ingen giltig kostplan kunde skapas.
+                FitPlan kunde inte skapa en komplett vecka med dina nuvarande filter.
+                Prova att ta bort något undviket livsmedel eller ändra ditt kostfilter.
               </p>
             </div>
           `;
