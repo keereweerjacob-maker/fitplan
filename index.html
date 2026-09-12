@@ -2000,10 +2000,10 @@ function scoreTotals(totals, meals = [], calorieTarget = user.calories) {
   }
 
   return (
-    calorieError * 0.55 +
-    proteinError * 0.35 +
-    carbError * 0.025 +
-    fatError * 0.025 +
+    calorieError * 0.60 +
+    proteinError * 0.25 +
+    carbError * 0.05 +
+    fatError * 0.05 +
     costScore * 0.05
   );
 }
@@ -2037,8 +2037,8 @@ function matchPercent(
     Math.max(user.fat, 1);
 
   const score =
-    calorieError * 0.55 +
-    proteinError * 0.35 +
+    calorieError * 0.65 +
+    proteinError * 0.25 +
     carbError * 0.05 +
     fatError * 0.05;
 
@@ -2217,21 +2217,46 @@ function optimizeDay(recentIds, dayNumber) {
 
     });
 
+    /*
+      Kontrollera först om kombinationen överhuvudtaget kan nå
+      dagens kalorimål inom FitPlans portionsgränser.
+      Om max 1.65x fortfarande ger för lite kalorier skippar vi
+      kombinationen direkt och låter försöken hitta en bättre bas.
+    */
+    const maxPossibleCalories =
+      selected.reduce(
+        (sum, meal) => sum + Number(meal.calories || 0) * 1.65,
+        0
+      );
+
+    const minPossibleCalories =
+      selected.reduce(
+        (sum, meal) => sum + Number(meal.calories || 0) * 0.60,
+        0
+      );
+
+    const dateKey =
+      getTrainingDateKeyForPlanDay(dayNumber);
+
+    const dailyCalories =
+      applyTrainingDayCalories(
+        user.calories,
+        dateKey
+      );
+
+    if (
+      maxPossibleCalories < dailyCalories ||
+      minPossibleCalories > dailyCalories
+    ) {
+      continue;
+    }
+
 
     /*
       Startportionen baseras på kalorifördelningen.
     */
 
-    const dateKey =
-  getTrainingDateKeyForPlanDay(dayNumber);
-
-const dailyCalories =
-  applyTrainingDayCalories(
-    user.calories,
-    dateKey
-  );
-
-const initialScales = selected.map(meal => {
+    const initialScales = selected.map(meal => {
 
   const target =
     dailyCalories *
