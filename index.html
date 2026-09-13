@@ -611,6 +611,12 @@ footer {
   line-height: 1.3;
 }
 .calendar-status.planned { color: var(--green); }
+.calendar-kcal, .calendar-duration {
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: .75;
+}
+
 .calendar-status.completed { color: #79bfff; }
 .calendar-status.missed { color: var(--warning); }
 .calendar-type {
@@ -691,6 +697,7 @@ footer {
   .calendar-day { min-height: 72px; padding: 6px; }
   .calendar-status { font-size: 10px; }
   .calendar-type { font-size: 9px; }
+  .calendar-kcal, .calendar-duration { font-size: 9px; }
   .calendar-month { font-size: 19px; }
 }
 
@@ -925,6 +932,13 @@ footer {
     <p>Planera dina träningspass och markera dem som genomförda.</p>
   </div>
 
+  <div class="training-calendar-summary" aria-label="Träningsstatistik för månaden">
+    <div><strong id="training-planned-count">0</strong><span>Planerade pass</span></div>
+    <div><strong id="training-completed-count">0</strong><span>Genomförda pass</span></div>
+    <div><strong id="training-adherence">0%</strong><span>Följsamhet</span></div>
+    <div><strong id="training-minutes">0</strong><span>Träningsminuter</span></div>
+  </div>
+
   <div class="card calendar-wrap">
     <div class="calendar-toolbar">
       <button class="btn secondary small" type="button" onclick="changeTrainingCalendarMonth(-1)">‹ Föregående</button>
@@ -961,6 +975,11 @@ footer {
         <option value="Cykling">Cykling</option>
         <option value="Annat">Annat</option>
       </select>
+    </div>
+
+    <div class="calendar-form-row">
+      <label for="trainingCalendarDuration">Träningslängd (minuter)</label>
+      <input id="trainingCalendarDuration" type="number" min="0" max="600" step="5" placeholder="T.ex. 60">
     </div>
 
     <div class="calendar-form-row">
@@ -4278,6 +4297,15 @@ function renderTrainingCalendar() {
       ? `<div class="calendar-type">${escapeHtml(entry.type)}</div>`
       : "";
 
+    const adjustment = getTrainingDayCalorieAdjustment(key);
+    const kcalHtml = entry.status && entry.status !== "none" && adjustment > 0
+      ? `<div class="calendar-kcal">+${adjustment} kcal</div>`
+      : "";
+
+    const durationHtml = entry.status === "completed" && Number(entry.duration) > 0
+      ? `<div class="calendar-duration">${Number(entry.duration)} min</div>`
+      : "";
+
     gridEl.insertAdjacentHTML("beforeend", `
       <button
         type="button"
@@ -4288,6 +4316,8 @@ function renderTrainingCalendar() {
         <div class="calendar-day-number">${day}</div>
         ${statusHtml}
         ${typeHtml}
+        ${kcalHtml}
+        ${durationHtml}
       </button>
     `);
   }
@@ -4317,6 +4347,12 @@ function openTrainingCalendarDay(dateKey) {
   statusEl.value = entry.status || "none";
   typeEl.value = entry.type || "Gym";
   noteEl.value = entry.note || "";
+
+  const durationEl = document.getElementById("trainingCalendarDuration");
+  if (durationEl) {
+    durationEl.value = Number.isFinite(Number(entry.duration)) ? entry.duration : "";
+  }
+
   modal.classList.add("open");
 }
 
@@ -4327,6 +4363,11 @@ function saveTrainingCalendarDay() {
   const status = document.getElementById("trainingCalendarStatus").value;
   const type = document.getElementById("trainingCalendarType").value;
   const note = document.getElementById("trainingCalendarNote").value.trim();
+  const durationEl = document.getElementById("trainingCalendarDuration");
+  const durationValue = durationEl ? Number(durationEl.value) : 0;
+  const duration = Number.isFinite(durationValue) && durationValue > 0
+    ? Math.min(600, Math.round(durationValue))
+    : 0;
 
   if (status === "none") {
     delete data[selectedTrainingCalendarDate];
@@ -4335,6 +4376,7 @@ function saveTrainingCalendarDay() {
       status,
       type,
       note,
+      duration,
       updatedAt: new Date().toISOString()
     };
   }
