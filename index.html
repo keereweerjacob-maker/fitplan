@@ -1035,6 +1035,31 @@ input:focus, select:focus, textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   V26.1 PROGRESS / WEIGHT CHART
+   ========================================================= */
+.progress-v26 { display:grid; gap:18px; }
+.progress-weight-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.progress-weight-card { padding:18px; border:1px solid var(--border); border-radius:16px; background:rgba(255,255,255,.035); }
+.progress-weight-card .value { display:block; font-size:28px; font-weight:900; }
+.progress-weight-card .caption { display:block; margin-top:5px; color:var(--muted); font-size:13px; }
+.progress-change-down { color:var(--winter-blue); }
+.progress-change-up { color:var(--winter-ice); }
+.progress-chart-wrap { overflow:hidden; border:1px solid var(--border); border-radius:16px; background:rgba(255,255,255,.025); padding:12px; }
+.progress-chart { width:100%; height:auto; display:block; }
+.progress-chart-grid { stroke:rgba(201,220,232,.12); stroke-width:1; }
+.progress-chart-line { fill:none; stroke:var(--winter-blue); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.progress-chart-area { fill:rgba(201,220,232,.08); }
+.progress-chart-dot { fill:var(--winter-blue); stroke:var(--winter-black); stroke-width:2; }
+.progress-chart-label { fill:var(--muted); font-size:11px; }
+.progress-chart-empty { min-height:220px; display:flex; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:20px; }
+.progress-history { max-height:260px; overflow:auto; }
+@media (max-width:700px) {
+  .progress-weight-cards { grid-template-columns:1fr; }
+  .progress-chart-wrap { padding:6px; }
+}
+
 </style>
 </head>
 
@@ -4157,167 +4182,125 @@ function renderTraining() {
 
 function renderProgress() {
 
-  const container =
-    document.getElementById("progressContent");
+  const container = document.getElementById("progressContent");
 
   if (!user) {
-
     container.innerHTML = `
       <div class="empty">
         Skapa din plan först.
       </div>
     `;
-
     return;
   }
 
+  const history = Array.isArray(weightHistory) ? weightHistory : [];
+  const currentWeight = history.length ? Number(history[history.length - 1].weight) : Number(user.weight);
+  const startingWeight = history.length ? Number(history[0].weight) : Number(user.weight);
+  const change = currentWeight - startingWeight;
 
-  const currentWeight =
-    weightHistory.length
-    ? weightHistory[weightHistory.length - 1].weight
-    : user.weight;
+  const chartData = history
+    .map(item => ({
+      date: item.date || "",
+      weight: Number(item.weight)
+    }))
+    .filter(item => Number.isFinite(item.weight));
 
-  const startingWeight =
-    weightHistory.length
-    ? weightHistory[0].weight
-    : user.weight;
+  let chartHtml = `<div class="progress-chart-empty">
+    Lägg till fler viktmätningar för att se din viktutveckling här.
+  </div>`;
 
-  const change =
-    currentWeight - startingWeight;
-
-
-  let historyHtml = "";
-
-  if (weightHistory.length) {
-
-    historyHtml = weightHistory
-      .slice()
-      .reverse()
-      .map(item => `
-        <li>
-          ${escapeHtml(item.date)}
-          –
-          <strong>
-            ${formatNumber(item.weight, 1)} kg
-          </strong>
-        </li>
-      `)
-      .join("");
-
-  } else {
-
-    historyHtml = `
-      <li>Ingen viktdata ännu.</li>
-    `;
+  if (chartData.length >= 2) {
+    const width = 760;
+    const height = 280;
+    const padLeft = 48;
+    const padRight = 18;
+    const padTop = 24;
+    const padBottom = 42;
+    const plotW = width - padLeft - padRight;
+    const plotH = height - padTop - padBottom;
+    const weights = chartData.map(d => d.weight);
+    const minWeight = Math.floor(Math.min(...weights) - 0.5);
+    const maxWeight = Math.ceil(Math.max(...weights) + 0.5);
+    const range = Math.max(1, maxWeight - minWeight);
+    const x = i => padLeft + (chartData.length === 1 ? plotW / 2 : i * plotW / (chartData.length - 1));
+    const y = w => padTop + (maxWeight - w) * plotH / range;
+    const points = chartData.map((d,i) => `${x(i).toFixed(1)},${y(d.weight).toFixed(1)}`).join(" ");
+    const areaPoints = `${padLeft},${padTop + plotH} ${points} ${x(chartData.length-1).toFixed(1)},${padTop + plotH}`;
+    const grid = [];
+    const labels = [];
+    const steps = Math.min(5, Math.max(2, range));
+    for (let i=0; i<=steps; i++) {
+      const value = minWeight + range * i / steps;
+      const yy = y(value);
+      grid.push(`<line class="progress-chart-grid" x1="${padLeft}" y1="${yy.toFixed(1)}" x2="${width-padRight}" y2="${yy.toFixed(1)}"></line>`);
+      labels.push(`<text class="progress-chart-label" x="8" y="${(yy+4).toFixed(1)}">${formatNumber(value,1)} kg</text>`);
+    }
+    const dots = chartData.map((d,i) => `<circle class="progress-chart-dot" cx="${x(i).toFixed(1)}" cy="${y(d.weight).toFixed(1)}" r="5"><title>${escapeHtml(d.date)} – ${formatNumber(d.weight,1)} kg</title></circle>`).join("");
+    const labelIndexes = chartData.length <= 6 ? chartData.map((_,i)=>i) : [0, Math.floor((chartData.length-1)/2), chartData.length-1];
+    const dateLabels = labelIndexes.map(i => `<text class="progress-chart-label" text-anchor="middle" x="${x(i).toFixed(1)}" y="${height-12}">${escapeHtml(chartData[i].date)}</text>`).join("");
+    chartHtml = `<div class="progress-chart-wrap">
+      <svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Graf över viktutveckling">
+        ${grid.join("")}
+        ${labels.join("")}
+        <polygon class="progress-chart-area" points="${areaPoints}"></polygon>
+        <polyline class="progress-chart-line" points="${points}"></polyline>
+        ${dots}
+        ${dateLabels}
+      </svg>
+    </div>`;
   }
 
+  const changeClass = change < 0 ? "progress-change-down" : change > 0 ? "progress-change-up" : "";
+  const changePrefix = change > 0 ? "+" : "";
 
-  const changeClass =
-    change < 0
-    ? "match-good"
-    : change > 0
-      ? "match-medium"
-      : "";
-
+  const historyHtml = history.length
+    ? history.slice().reverse().map(item => `
+        <li>${escapeHtml(item.date || "")} – <strong>${formatNumber(item.weight,1)} kg</strong></li>
+      `).join("")
+    : `<li>Ingen viktdata ännu.</li>`;
 
   container.innerHTML = `
-
-    <div class="grid grid-3">
-
-      <div class="card stat">
-
-        <span class="number">
-          ${formatNumber(currentWeight, 1)}
-        </span>
-
-        <span class="label">
-          aktuell vikt
-        </span>
-
+    <div class="progress-v26">
+      <div class="progress-weight-cards">
+        <div class="progress-weight-card">
+          <span class="value">${formatNumber(currentWeight,1)} kg</span>
+          <span class="caption">Aktuell vikt</span>
+        </div>
+        <div class="progress-weight-card">
+          <span class="value">${formatNumber(startingWeight,1)} kg</span>
+          <span class="caption">Startvikt</span>
+        </div>
+        <div class="progress-weight-card">
+          <span class="value ${changeClass}">${changePrefix}${formatNumber(change,1)} kg</span>
+          <span class="caption">Förändring sedan start</span>
+        </div>
       </div>
-
-      <div class="card stat">
-
-        <span class="number">
-          ${formatNumber(startingWeight, 1)}
-        </span>
-
-        <span class="label">
-          startvikt
-        </span>
-
-      </div>
-
-      <div class="card stat">
-
-        <span class="number ${changeClass}">
-          ${change > 0 ? "+" : ""}
-          ${formatNumber(change, 1)}
-        </span>
-
-        <span class="label">
-          förändring
-        </span>
-
-      </div>
-
-    </div>
-
-    <div style="height:18px"></div>
-
-    <div class="grid grid-2">
 
       <div class="card">
-
-        <h3>Uppdatera vikt</h3>
-
-        <p>
-          Lägg till din aktuella vikt.
-        </p>
-
-        <div class="form-group" style="margin-top:15px">
-
-          <label for="newWeight">
-            Vikt (kg)
-          </label>
-
-          <input
-            id="newWeight"
-            type="number"
-            step="0.1"
-            min="35"
-            max="250"
-            placeholder="${formatNumber(currentWeight,1)}"
-          >
-
-        </div>
-
-        <div class="form-actions">
-
-          <button
-            class="btn"
-            onclick="updateWeight()"
-          >
-            Spara vikt
-          </button>
-
-        </div>
-
+        <h3>Viktutveckling</h3>
+        <p>Din registrerade vikt över tid.</p>
+        ${chartHtml}
       </div>
 
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Uppdatera vikt</h3>
+          <p>Lägg till din aktuella vikt.</p>
+          <div class="form-group" style="margin-top:15px">
+            <label for="newWeight">Vikt (kg)</label>
+            <input id="newWeight" type="number" step="0.1" min="35" max="250" placeholder="${formatNumber(currentWeight,1)}">
+          </div>
+          <div class="form-actions">
+            <button class="btn" onclick="updateWeight()">Spara vikt</button>
+          </div>
+        </div>
 
-      <div class="card">
-
-        <h3>Vikthistorik</h3>
-
-        <ul class="shopping-list">
-          ${historyHtml}
-        </ul>
-
+        <div class="card">
+          <h3>Vikthistorik</h3>
+          <ul class="shopping-list progress-history">${historyHtml}</ul>
+        </div>
       </div>
-
     </div>
-
   `;
 }
 
