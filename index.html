@@ -1055,9 +1055,20 @@ input:focus, select:focus, textarea:focus {
 .progress-chart-label { fill:var(--muted); font-size:11px; }
 .progress-chart-empty { min-height:220px; display:flex; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:20px; }
 .progress-history { max-height:260px; overflow:auto; }
+.progress-stats-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.progress-stat-card { padding:18px; border:1px solid var(--border); border-radius:16px; background:rgba(255,255,255,.035); }
+.progress-stat-card .value { display:block; font-size:26px; font-weight:900; }
+.progress-stat-card .label { display:block; margin-top:5px; color:var(--muted); font-size:13px; }
+.progress-stat-card .sub { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+.progress-summary { border:1px solid rgba(201,220,232,.25); background:rgba(201,220,232,.055); }
+.progress-summary strong { color:var(--winter-blue); }
 @media (max-width:700px) {
   .progress-weight-cards { grid-template-columns:1fr; }
+  .progress-stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .progress-chart-wrap { padding:6px; }
+}
+@media (max-width:460px) {
+  .progress-stats-grid { grid-template-columns:1fr; }
 }
 
 </style>
@@ -2845,6 +2856,8 @@ function scoreWeeklyPlan(week) {
 
   let nutritionScore = 0;
   let totalCost = 0;
+  let totalMeals = 0;
+  const mealCounts = {};
 
   for (const day of week) {
 
@@ -2863,6 +2876,12 @@ function scoreWeeklyPlan(week) {
         sum + Number(meal.cost || 2),
       0
     );
+
+    for (const meal of day.meals) {
+      totalMeals++;
+      mealCounts[meal.id] =
+        (mealCounts[meal.id] || 0) + 1;
+    }
   }
 
   nutritionScore /= week.length;
@@ -2874,9 +2893,27 @@ function scoreWeeklyPlan(week) {
   const costScore =
     (averageCost - 1) / 2;
 
+  /*
+    V27: veckans variation.
+    Nutrition kommer fortfarande först, men om två veckor är
+    nästan lika bra näringsmässigt väljer FitPlan den med färre
+    upprepningar av exakt samma måltid.
+  */
+  let repeatedMeals = 0;
+
+  Object.values(mealCounts).forEach(count => {
+    if (count > 1) {
+      repeatedMeals += count - 1;
+    }
+  });
+
+  const varietyScore =
+    repeatedMeals / Math.max(totalMeals, 1);
+
   return (
-    nutritionScore * 0.90 +
-    costScore * 0.10
+    nutritionScore * 0.88 +
+    costScore * 0.07 +
+    varietyScore * 0.05
   );
 }
 
@@ -2900,7 +2937,13 @@ function scoreWeeklyPlan(week) {
     return null;
   }
 
-  const weeklyAttempts = 8;
+  /*
+    V27: fler veckokandidater.
+    Varje kandidat bygger fortfarande på samma dagliga optimizer,
+    men FitPlan får fler chanser att hitta en vecka som kombinerar
+    bra näringsprecision, rimlig kostnad och bättre variation.
+  */
+  const weeklyAttempts = 16;
 
   let bestWeek = null;
   let bestScore = Infinity;
@@ -4197,6 +4240,51 @@ function renderProgress() {
   const currentWeight = history.length ? Number(history[history.length - 1].weight) : Number(user.weight);
   const startingWeight = history.length ? Number(history[0].weight) : Number(user.weight);
   const change = currentWeight - startingWeight;
+  const weeklyStats = calculateWeeklyStats();
+  const trainingStats = calculateCurrentWeekTrainingStats();
+  const trainingAdherence = trainingStats && trainingStats.planned
+    ? Math.min(100, (trainingStats.completed / trainingStats.planned) * 100)
+    : 0;
+
+  let progressSummary = "Skapa en kostplan och registrera träning för att få en personlig veckorapport.";
+
+  if (weeklyStats) {
+    const nutritionMatch = Number(weeklyStats.avgMatch) || 0;
+    const calorieDiff = Number(weeklyStats.avgCalories) - Number(user.calories);
+    const proteinDiff = Number(weeklyStats.avgProtein) - Number(user.protein);
+
+    const nutritionText = nutritionMatch >= 97
+      ? "Kostplanen ligger mycket nära dina mål."
+      : nutritionMatch >= 90
+        ? "Kostplanen ligger nära dina mål."
+        : "Kostplanen har utrymme för finjustering.";
+
+    const calorieText = Math.abs(calorieDiff) < 50
+      ? "Kaloriintaget ligger mycket nära ditt dagliga mål."
+      : calorieDiff > 0
+        ? `Du låg i genomsnitt ${formatNumber(Math.abs(calorieDiff))} kcal över målet per dag.`
+        : `Du låg i genomsnitt ${formatNumber(Math.abs(calorieDiff))} kcal under målet per dag.`;
+
+    const proteinText = Math.abs(proteinDiff) < 5
+      ? "Proteinintaget ligger nära ditt mål."
+      : proteinDiff > 0
+        ? `Protein låg i genomsnitt ${formatNumber(Math.abs(proteinDiff))} g över målet.`
+        : `Protein låg i genomsnitt ${formatNumber(Math.abs(proteinDiff))} g under målet.`;
+
+    const trainingText = trainingStats.planned
+      ? trainingStats.completed >= trainingStats.planned
+        ? `Du genomförde alla ${trainingStats.planned} planerade pass (${formatNumber(trainingStats.minutes)} min).`
+        : `Du genomförde ${trainingStats.completed} av ${trainingStats.planned} planerade pass (${formatNumber(trainingStats.minutes)} min).`
+      : "Du har inga planerade pass registrerade ännu.";
+
+    const nextStep = trainingStats.planned && trainingStats.completed < trainingStats.planned
+      ? "Nästa vecka kan du fokusera på att genomföra fler av de planerade passen."
+      : nutritionMatch < 90
+        ? "Nästa vecka kan FitPlan hjälpa dig att finjustera måltiderna ytterligare."
+        : "Fortsätt på samma spår och registrera dina resultat löpande.";
+
+    progressSummary = `${nutritionText} ${calorieText} ${proteinText} ${trainingText} ${nextStep}`;
+  }
 
   const chartData = history
     .map(item => ({
@@ -4206,10 +4294,10 @@ function renderProgress() {
     .filter(item => Number.isFinite(item.weight));
 
   let chartHtml = `<div class="progress-chart-empty">
-    Lägg till fler viktmätningar för att se din viktutveckling här.
+    Lägg till din första viktmätning för att se den här.
   </div>`;
 
-  if (chartData.length >= 2) {
+  if (chartData.length >= 1) {
     const width = 760;
     const height = 280;
     const padLeft = 48;
@@ -4238,14 +4326,22 @@ function renderProgress() {
     const dots = chartData.map((d,i) => `<circle class="progress-chart-dot" cx="${x(i).toFixed(1)}" cy="${y(d.weight).toFixed(1)}" r="5"><title>${escapeHtml(d.date)} – ${formatNumber(d.weight,1)} kg</title></circle>`).join("");
     const labelIndexes = chartData.length <= 6 ? chartData.map((_,i)=>i) : [0, Math.floor((chartData.length-1)/2), chartData.length-1];
     const dateLabels = labelIndexes.map(i => `<text class="progress-chart-label" text-anchor="middle" x="${x(i).toFixed(1)}" y="${height-12}">${escapeHtml(chartData[i].date)}</text>`).join("");
+    const chartLine = chartData.length >= 2
+      ? `<polygon class="progress-chart-area" points="${areaPoints}"></polygon>
+         <polyline class="progress-chart-line" points="${points}"></polyline>`
+      : "";
+
+    const singlePointNote = chartData.length === 1
+      ? `<text class="progress-chart-label" text-anchor="middle" x="${x(0).toFixed(1)}" y="${height-12}">Lägg till nästa mätning för att se trenden</text>`
+      : "";
+
     chartHtml = `<div class="progress-chart-wrap">
       <svg class="progress-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Graf över viktutveckling">
         ${grid.join("")}
         ${labels.join("")}
-        <polygon class="progress-chart-area" points="${areaPoints}"></polygon>
-        <polyline class="progress-chart-line" points="${points}"></polyline>
+        ${chartLine}
         ${dots}
-        ${dateLabels}
+        ${chartData.length === 1 ? singlePointNote : dateLabels}
       </svg>
     </div>`;
   }
@@ -4274,6 +4370,38 @@ function renderProgress() {
           <span class="value ${changeClass}">${changePrefix}${formatNumber(change,1)} kg</span>
           <span class="caption">Förändring sedan start</span>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Veckans kost & träning</h3>
+        <p>Din sammanfattning för den aktuella veckan.</p>
+        <div class="progress-stats-grid" style="margin-top:15px">
+          <div class="progress-stat-card">
+            <span class="value">${weeklyStats ? formatNumber(weeklyStats.avgCalories) : "–"}</span>
+            <span class="label">Genomsnitt kcal / dag</span>
+            <span class="sub">mål ${weeklyStats ? formatNumber(user.calories) : "–"} kcal</span>
+          </div>
+          <div class="progress-stat-card">
+            <span class="value">${weeklyStats ? `${formatNumber(weeklyStats.avgProtein)} g` : "–"}</span>
+            <span class="label">Genomsnitt protein</span>
+            <span class="sub">mål ${weeklyStats ? formatNumber(user.protein) : "–"} g</span>
+          </div>
+          <div class="progress-stat-card">
+            <span class="value">${weeklyStats ? `${formatNumber(weeklyStats.avgMatch)}%` : "–"}</span>
+            <span class="label">Kostmatchning</span>
+            <span class="sub">mot dina kostmål</span>
+          </div>
+          <div class="progress-stat-card">
+            <span class="value">${trainingStats ? `${trainingStats.completed}/${trainingStats.planned}` : "–"}</span>
+            <span class="label">Genomförda pass</span>
+            <span class="sub">${trainingStats ? `${formatNumber(trainingStats.minutes)} min · ${formatNumber(trainingAdherence)}% följsamhet` : "–"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card progress-summary">
+        <h3>Veckans sammanfattning</h3>
+        <p>${escapeHtml(progressSummary)}</p>
       </div>
 
       <div class="card">
