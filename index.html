@@ -2587,15 +2587,21 @@ function optimizeScales(
   kombination.
 */
 
+/*
+  V29: smart variation directly in the meal picker.
+  Nutrition remains dominant, but a meal sharing the same main ingredient
+  as a recent meal of the same type gets a small selection penalty.
+*/
 function pickMealForCalorieTarget(
   list,
   targetCalories,
   highCalorieMode,
-  targetProtein = user.protein
+  targetProtein = user.protein,
+  recentVariationKeys = []
 ) {
 
-  if (!highCalorieMode || list.length <= 1) {
-    return list[Math.floor(Math.random() * list.length)];
+  if (list.length <= 1) {
+    return list[0];
   }
 
   /*
@@ -2614,7 +2620,16 @@ function pickMealForCalorieTarget(
   const desiredProteinDensity =
     Number(targetProtein || 0) / Math.max(Number(targetCalories || 0), 1);
 
-  const weights = list.map(meal => {
+  /*
+    V29.1: variation får bara påverka valet när det finns ett
+    alternativ utan samma huvudsakliga råvara som är nästan lika bra.
+
+    Nutrition är alltså fortfarande första prioritet.
+  */
+  const baseWeights = list.map(meal => {
+    if (!highCalorieMode) {
+      return 1;
+    }
 
     const calories = Math.max(Number(meal.calories || 0), 1);
     const protein = Math.max(Number(meal.protein || 0), 0);
@@ -2641,6 +2656,39 @@ function pickMealForCalorieTarget(
     return Math.pow(calorieFit, 1.5) * proteinFit;
   });
 
+  const bestFreshWeight = list.reduce((best, meal, index) => {
+    const variationKey = getMealVariationKey(meal);
+    if (recentVariationKeys.includes(variationKey)) {
+      return best;
+    }
+    return Math.max(best, baseWeights[index]);
+  }, 0);
+
+  const bestRepeatedWeight = list.reduce((best, meal, index) => {
+    const variationKey = getMealVariationKey(meal);
+    if (!recentVariationKeys.includes(variationKey)) {
+      return best;
+    }
+    return Math.max(best, baseWeights[index]);
+  }, 0);
+
+  const variationCanApply =
+    bestFreshWeight > 0 &&
+    bestRepeatedWeight > 0 &&
+    bestFreshWeight >= bestRepeatedWeight * 0.90;
+
+  const weights = list.map((meal, index) => {
+    const variationKey = getMealVariationKey(meal);
+    const isRepeated =
+      recentVariationKeys.includes(variationKey);
+
+    if (variationCanApply && isRepeated) {
+      return baseWeights[index] * 0.35;
+    }
+
+    return baseWeights[index];
+  });
+
   const totalWeight =
     weights.reduce((sum, weight) => sum + weight, 0);
 
@@ -2662,6 +2710,18 @@ function pickMealForCalorieTarget(
 function optimizeDay(recentIds, dayNumber) {
 
   const candidates = {};
+  const recentVariationKeysByType = {};
+  for (const recentId of recentIds) {
+    const recentMeal = meals.find(meal => meal.id === recentId);
+    if (!recentMeal) continue;
+    if (!recentVariationKeysByType[recentMeal.type]) {
+      recentVariationKeysByType[recentMeal.type] = [];
+    }
+    const variationKey = getMealVariationKey(recentMeal);
+    if (!recentVariationKeysByType[recentMeal.type].includes(variationKey)) {
+      recentVariationKeysByType[recentMeal.type].push(variationKey);
+    }
+  }
 
   const dateKey =
     getTrainingDateKeyForPlanDay(dayNumber);
@@ -2741,7 +2801,8 @@ function optimizeDay(recentIds, dayNumber) {
         list,
         targetForMeal,
         highCalorieMode,
-        targetProteinForMeal
+        targetProteinForMeal,
+        recentVariationKeysByType[type] || []
       );
     });
 
@@ -2848,6 +2909,50 @@ function optimizeDay(recentIds, dayNumber) {
 /* =========================================================
    WEEK GENERATOR
 ========================================================= */
+/*
+  V28: smart variation.
+  Vi skiljer på exakt samma rätt och samma huvudsakliga råvara.
+  Nutrition prioriteras fortfarande högst.
+*/
+function getMealVariationKey(meal) {
+
+  if (!meal) {
+    return "unknown";
+  }
+
+  const text = [
+    meal.name || "",
+    ...(meal.ingredients || []).map(
+      ingredient => ingredient.name || ""
+    )
+  ].join(" ").toLowerCase();
+
+  const groups = [
+    ["chicken", "kyckling", "kycklingfilé", "kycklingfärs"],
+    ["beef", "nötkött", "nötfärs", "köttfärs", "biff"],
+    ["salmon", "lax"],
+    ["tuna", "tonfisk"],
+    ["fish", "fisk", "torsk", "räkor", "skaldjur"],
+    ["egg", "ägg"],
+    ["lentil", "lins", "linser"],
+    ["bean", "böna", "bönor", "kikärta", "kikärtor"],
+    ["tofu", "tofu"],
+    ["turkey", "kalkon"],
+    ["pork", "fläsk", "skinka"],
+    ["cottage", "keso"],
+    ["yoghurt", "yoghurt", "kvarg"],
+    ["proteinpowder", "proteinpulver"]
+  ];
+
+  for (const [key, ...keywords] of groups) {
+    if (keywords.some(keyword => text.includes(keyword))) {
+      return key;
+    }
+  }
+
+  return meal.id || "unknown";
+}
+
 function scoreWeeklyPlan(week) {
 
   if (!week || !week.length) {
@@ -2861,15 +2966,15 @@ function scoreWeeklyPlan(week) {
 
   for (const day of week) {
 
-   nutritionScore +=
-  scoreTotals(
-    day.totals,
-    day.meals,
-    applyTrainingDayCalories(
-      user.calories,
-      getTrainingDateKeyForPlanDay(day.day)
-    )
-  );
+    nutritionScore +=
+      scoreTotals(
+        day.totals,
+        day.meals,
+        applyTrainingDayCalories(
+          user.calories,
+          getTrainingDateKeyForPlanDay(day.day)
+        )
+      );
 
     totalCost += day.meals.reduce(
       (sum, meal) =>
@@ -2893,12 +2998,6 @@ function scoreWeeklyPlan(week) {
   const costScore =
     (averageCost - 1) / 2;
 
-  /*
-    V27: veckans variation.
-    Nutrition kommer fortfarande först, men om två veckor är
-    nästan lika bra näringsmässigt väljer FitPlan den med färre
-    upprepningar av exakt samma måltid.
-  */
   let repeatedMeals = 0;
 
   Object.values(mealCounts).forEach(count => {
@@ -2907,17 +3006,57 @@ function scoreWeeklyPlan(week) {
     }
   });
 
-  const varietyScore =
+  const exactRepeatScore =
     repeatedMeals / Math.max(totalMeals, 1);
 
+  /*
+    V28: samma huvudsakliga råvara på samma måltidstyp
+    flera dagar i rad kostar extra.
+  */
+  let ingredientRepeats = 0;
+  let ingredientComparisons = 0;
+
+  for (let dayIndex = 1; dayIndex < week.length; dayIndex++) {
+
+    const previousDay = week[dayIndex - 1];
+    const currentDay = week[dayIndex];
+
+    for (const type of mealTypes) {
+
+      const previousMeal =
+        previousDay.meals.find(meal => meal.type === type);
+
+      const currentMeal =
+        currentDay.meals.find(meal => meal.type === type);
+
+      if (!previousMeal || !currentMeal) {
+        continue;
+      }
+
+      ingredientComparisons++;
+
+      if (
+        getMealVariationKey(previousMeal) ===
+        getMealVariationKey(currentMeal)
+      ) {
+        ingredientRepeats++;
+      }
+    }
+  }
+
+  const ingredientRepeatScore =
+    ingredientRepeats /
+    Math.max(ingredientComparisons, 1);
+
   return (
-    nutritionScore * 0.88 +
-    costScore * 0.07 +
-    varietyScore * 0.05
+    nutritionScore * 0.86 +
+    costScore * 0.06 +
+    exactRepeatScore * 0.04 +
+    ingredientRepeatScore * 0.04
   );
 }
 
-  function calculateWeeklyCost(week) {
+function calculateWeeklyCost(week) {
 
   return week.reduce((total, day) => {
 
