@@ -597,6 +597,9 @@ textarea {
   border-top: none;
 }
 
+.meal-image-wrap { position:relative; width:100%; aspect-ratio:16/8; margin:0 0 14px; overflow:hidden; border:1px solid var(--border); border-radius:14px; background:linear-gradient(135deg,rgba(201,220,232,.12),rgba(142,175,194,.05)),var(--bg2); }
+.meal-image { width:100%; height:100%; display:block; object-fit:cover; }
+.meal-image-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:42px; color:var(--muted); pointer-events:none; }
 .meal-top {
   display: flex;
   justify-content: space-between;
@@ -1071,6 +1074,9 @@ input:focus, select:focus, textarea:focus {
   .progress-stats-grid { grid-template-columns:1fr; }
 }
 
+/* V31 MEAL IMAGES */
+@media (max-width:600px){.meal-image-wrap{aspect-ratio:16/9;border-radius:12px;}}
+
 </style>
 </head>
 
@@ -1461,6 +1467,47 @@ price: 17
   },
 
 
+
+  {
+    id: "breakfast_omelette",
+    type: "breakfast",
+    name: "Omelett med skinka + bröd",
+    mainIngredient: "ham",
+    diet: ["normal", "highprotein", "budget"],
+    ingredients: [
+      {name:"Ägg", qty:3, unit:"st"},
+      {name:"Skinka", qty:80, unit:"g"},
+      {name:"Fullkornsbröd", qty:80, unit:"g"},
+      {name:"Grönsaker", qty:100, unit:"g"}
+    ],
+    calories: 520,
+    protein: 40,
+    carbs: 45,
+    fat: 19,
+    cost: 2,
+price: 23
+  },
+
+  {
+    id: "breakfast_skyr",
+    type: "breakfast",
+    name: "Skyr med granola + bär",
+    mainIngredient: "skyr",
+    diet: ["normal", "highprotein", "budget", "vegetarian"],
+    ingredients: [
+      {name:"Skyr", qty:300, unit:"g"},
+      {name:"Granola", qty:60, unit:"g"},
+      {name:"Bär", qty:100, unit:"g"},
+      {name:"Banan", qty:1, unit:"st"}
+    ],
+    calories: 540,
+    protein: 39,
+    carbs: 78,
+    fat: 8,
+    cost: 2,
+price: 22
+  },
+
   /* ---------------- SNACK ---------------- */
 
   {
@@ -1533,6 +1580,46 @@ price: 7
 price: 13
   },
 
+
+
+  {
+    id: "snack_hummus",
+    type: "snack",
+    name: "Hummus + grönsaker + bröd",
+    mainIngredient: "chickpea",
+    diet: ["normal", "vegetarian", "budget"],
+    ingredients: [
+      {name:"Hummus", qty:80, unit:"g"},
+      {name:"Fullkornsbröd", qty:70, unit:"g"},
+      {name:"Morot", qty:100, unit:"g"},
+      {name:"Gurka", qty:100, unit:"g"}
+    ],
+    calories: 300,
+    protein: 10,
+    carbs: 40,
+    fat: 11,
+    cost: 1,
+price: 10
+  },
+
+  {
+    id: "snack_skyr",
+    type: "snack",
+    name: "Skyr + bär",
+    mainIngredient: "skyr",
+    diet: ["normal", "highprotein", "budget", "vegetarian"],
+    ingredients: [
+      {name:"Skyr", qty:250, unit:"g"},
+      {name:"Bär", qty:100, unit:"g"},
+      {name:"Honung", qty:10, unit:"g"}
+    ],
+    calories: 220,
+    protein: 28,
+    carbs: 25,
+    fat: 1,
+    cost: 1,
+price: 15
+  },
 
   /* ---------------- LUNCH ---------------- */
 
@@ -1651,6 +1738,87 @@ price: 27
   },
 
 
+
+  {
+    id: "lunch_turkey",
+    type: "lunch",
+    name: "Kalkon + bulgur",
+    mainIngredient: "turkey",
+    diet: ["normal", "highprotein", "budget"],
+    ingredients: [
+      {name:"Kalkon", qty:180, unit:"g"},
+      {name:"Bulgur", qty:100, unit:"g"},
+      {name:"Grönsaker", qty:180, unit:"g"},
+      {name:"Matolja", qty:10, unit:"g"}
+    ],
+    calories: 660,
+    protein: 52,
+    carbs: 72,
+    fat: 14,
+    cost: 2,
+price: 29
+  },
+
+  {
+    id: "lunch_cod",
+    type: "lunch",
+    name: "Torsk + potatis",
+    mainIngredient: "cod",
+    diet: ["normal", "highprotein"],
+    ingredients: [
+      {name:"Torsk", qty:200, unit:"g"},
+      {name:"Potatis", qty:350, unit:"g"},
+      {name:"Grönsaker", qty:150, unit:"g"},
+      {name:"Matolja", qty:10, unit:"g"}
+    ],
+    calories: 610,
+    protein: 48,
+    carbs: 65,
+    fat: 13,
+    cost: 2,
+price: 31
+  },
+
+  {
+    id: "lunch_chickpea",
+    type: "lunch",
+    name: "Kikärtsbowl med feta",
+    mainIngredient: "chickpea",
+    diet: ["vegetarian", "normal", "budget"],
+    ingredients: [
+      {name:"Kikärtor", qty:180, unit:"g"},
+      {name:"Ris", qty:90, unit:"g"},
+      {name:"Fetaost", qty:40, unit:"g"},
+      {name:"Grönsaker", qty:180, unit:"g"}
+    ],
+    calories: 690,
+    protein: 25,
+    carbs: 95,
+    fat: 20,
+    cost: 1,
+price: 20
+  },
+
+  {
+    id: "lunch_tuna",
+    type: "lunch",
+    name: "Tonfiskpasta",
+    mainIngredient: "tuna",
+    diet: ["normal", "highprotein", "budget"],
+    ingredients: [
+      {name:"Tonfisk", qty:150, unit:"g"},
+      {name:"Pasta", qty:100, unit:"g"},
+      {name:"Tomatsås", qty:150, unit:"g"},
+      {name:"Grönsaker", qty:100, unit:"g"}
+    ],
+    calories: 670,
+    protein: 49,
+    carbs: 82,
+    fat: 14,
+    cost: 2,
+price: 27
+  },
+
   /* ---------------- DINNER ---------------- */
 
   {
@@ -1767,6 +1935,87 @@ price: 24
   },
 
 
+
+  {
+    id: "dinner_pork",
+    type: "dinner",
+    name: "Fläskfilé + ris",
+    mainIngredient: "pork",
+    diet: ["normal", "highprotein"],
+    ingredients: [
+      {name:"Fläskfilé", qty:180, unit:"g"},
+      {name:"Ris", qty:100, unit:"g"},
+      {name:"Grönsaker", qty:180, unit:"g"},
+      {name:"Matolja", qty:10, unit:"g"}
+    ],
+    calories: 680,
+    protein: 51,
+    carbs: 76,
+    fat: 16,
+    cost: 2,
+price: 30
+  },
+
+  {
+    id: "dinner_turkey",
+    type: "dinner",
+    name: "Kalkonwok + nudlar",
+    mainIngredient: "turkey",
+    diet: ["normal", "highprotein", "budget"],
+    ingredients: [
+      {name:"Kalkon", qty:180, unit:"g"},
+      {name:"Nudlar", qty:100, unit:"g"},
+      {name:"Wokgrönsaker", qty:200, unit:"g"},
+      {name:"Matolja", qty:10, unit:"g"}
+    ],
+    calories: 690,
+    protein: 50,
+    carbs: 82,
+    fat: 15,
+    cost: 2,
+price: 29
+  },
+
+  {
+    id: "dinner_halloumi",
+    type: "dinner",
+    name: "Halloumi + bulgur",
+    mainIngredient: "halloumi",
+    diet: ["vegetarian", "normal"],
+    ingredients: [
+      {name:"Halloumi", qty:120, unit:"g"},
+      {name:"Bulgur", qty:100, unit:"g"},
+      {name:"Grönsaker", qty:200, unit:"g"},
+      {name:"Matolja", qty:5, unit:"g"}
+    ],
+    calories: 700,
+    protein: 31,
+    carbs: 78,
+    fat: 28,
+    cost: 2,
+price: 28
+  },
+
+  {
+    id: "dinner_seitan",
+    type: "dinner",
+    name: "Seitanwok + ris",
+    mainIngredient: "seitan",
+    diet: ["vegetarian", "normal", "highprotein", "budget"],
+    ingredients: [
+      {name:"Seitan", qty:180, unit:"g"},
+      {name:"Ris", qty:100, unit:"g"},
+      {name:"Wokgrönsaker", qty:200, unit:"g"},
+      {name:"Matolja", qty:10, unit:"g"}
+    ],
+    calories: 650,
+    protein: 45,
+    carbs: 78,
+    fat: 13,
+    cost: 2,
+price: 24
+  },
+
   /* ---------------- EVENING ---------------- */
 
   {
@@ -1836,7 +2085,26 @@ price: 14
     fat: 8,
     cost: 1,
 price: 13
-  }
+  },
+
+  {
+    id: "evening_skyr",
+    type: "evening",
+    name: "Skyr + frukt",
+    mainIngredient: "skyr",
+    diet: ["normal", "highprotein", "budget", "vegetarian"],
+    ingredients: [
+      {name:"Skyr", qty:250, unit:"g"},
+      {name:"Äpple", qty:1, unit:"st"},
+      {name:"Bär", qty:80, unit:"g"}
+    ],
+    calories: 250,
+    protein: 29,
+    carbs: 32,
+    fat: 1,
+    cost: 1,
+price: 15
+  },
 
 ];
 
@@ -2920,6 +3188,10 @@ function getMealVariationKey(meal) {
     return "unknown";
   }
 
+  if (meal.mainIngredient) {
+    return String(meal.mainIngredient).toLowerCase();
+  }
+
   const text = [
     meal.name || "",
     ...(meal.ingredients || []).map(
@@ -2951,6 +3223,23 @@ function getMealVariationKey(meal) {
   }
 
   return meal.id || "unknown";
+}
+
+function getMealImageUrl(meal) {
+  if (!meal) return "";
+  const imageKeywords = {
+    chicken:"chicken rice", beef:"beef steak", salmon:"salmon vegetables", tuna:"tuna salad",
+    fish:"white fish vegetables", egg:"eggs breakfast", lentil:"lentil bowl", bean:"bean bowl",
+    tofu:"tofu vegetables", turkey:"turkey rice", pork:"pork vegetables", cottage:"cottage cheese fruit",
+    yoghurt:"yogurt berries", skyr:"skyr berries", chickpea:"chickpea hummus", halloumi:"halloumi vegetables",
+    seitan:"seitan vegetables", ham:"ham sandwich", proteinpowder:"protein shake banana"
+  };
+  const key=getMealVariationKey(meal);
+  const query=imageKeywords[key]||"healthy meal";
+  let hash=0; const source=String(meal.id||meal.name||query);
+  for(let i=0;i<source.length;i++){hash=((hash<<5)-hash)+source.charCodeAt(i);hash|=0;}
+  hash=Math.abs(hash)%1000;
+  return "https://loremflickr.com/900/500/"+encodeURIComponent(query)+",food?lock="+hash;
 }
 
 function scoreWeeklyPlan(week) {
@@ -3825,6 +4114,11 @@ function renderNutrition() {
       html += `
 
         <div class="meal">
+
+          <div class="meal-image-wrap">
+            <div class="meal-image-fallback">🍽️</div>
+            <img class="meal-image" src="${getMealImageUrl(meal)}" alt="${escapeHtml(meal.name)}" loading="lazy" onerror="this.style.display='none'">
+          </div>
 
           <div class="meal-top">
 
