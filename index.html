@@ -597,8 +597,8 @@ textarea {
   border-top: none;
 }
 
-.meal-image-wrap { position:relative; width:100%; aspect-ratio:16/8; margin:0 0 14px; overflow:hidden; border:1px solid var(--border); border-radius:14px; background:linear-gradient(135deg,rgba(201,220,232,.12),rgba(142,175,194,.05)),var(--bg2); }
-.meal-image { width:100%; height:100%; display:block; object-fit:cover; }
+.meal-image-wrap { position:relative; width:min(100%,360px); aspect-ratio:4/3; margin:0 0 14px; overflow:hidden; border:1px solid var(--border); border-radius:14px; background:linear-gradient(135deg,rgba(201,220,232,.12),rgba(142,175,194,.05)),var(--bg2); }
+.meal-image { width:100%; height:100%; display:block; object-fit:contain; object-position:center; }
 .meal-image-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:42px; color:var(--muted); pointer-events:none; }
 .meal-top {
   display: flex;
